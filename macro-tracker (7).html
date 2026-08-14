@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MACRO TRACKER — SPIDER NUTRITION SYSTEM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  :root{
+    --bg:#0a0a12;
+    --panel:#111119;
+    --panel2:#161622;
+    --line:#26233a;
+    --red:#e2231a;
+    --red-dim:#5c0f0c;
+    --red-glow:rgba(226,35,26,.4);
+    --blue:#1e6fff;
+    --blue-dim:#0d2a66;
+    --blue-glow:rgba(30,111,255,.45);
+    --text:#f2f0f2;
+    --muted:#8b87a3;
+    --good:#2ecc71;
+    --warn:#f2b705;
+    --bad:#e2231a;
+    --mono:'Consolas','SFMono-Regular','Courier New',monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+    --pixel:'Press Start 2P','Consolas',monospace;
+    --serif:var(--mono);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{
+    min-height:100vh;
+    background-image:
+      radial-gradient(circle at 8% -5%, rgba(226,35,26,.12), transparent 38%),
+      radial-gradient(circle at 100% 10%, rgba(30,111,255,.14), transparent 38%),
+      radial-gradient(circle at 30% 100%, rgba(30,111,255,.08), transparent 40%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0px, rgba(255,255,255,.015) 1px, transparent 1px, transparent 3px);
+  }
+  .web-bg{position:fixed;inset:0;pointer-events:none;opacity:.05;z-index:0;}
+  .wrap{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:0 0 60px;}
+
+  /* scrolling ticker banners, like the program dashboard */
+  .ticker{
+    background:var(--red);color:#0a0a0f;overflow:hidden;white-space:nowrap;position:relative;
+    border-bottom:2px solid #000;
+  }
+  .ticker.blue{background:var(--blue);border-bottom:none;border-top:2px solid #000;}
+  .ticker .ticker-track{display:inline-block;padding-left:100%;animation:ticker 26s linear infinite;font-family:var(--pixel);font-weight:400;font-size:9px;letter-spacing:.04em;text-transform:uppercase;padding-top:8px;padding-bottom:8px;}
+  @keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
+
+  .inner{padding:16px 16px 0;}
+  header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+  .brand{display:flex;flex-direction:column;gap:6px;}
+  .brand .tag{font-family:var(--pixel);font-size:8.5px;letter-spacing:.1em;color:var(--red);text-transform:uppercase;line-height:1.6;}
+  .brand h1{margin:2px 0 0;font-size:17px;letter-spacing:0;font-weight:400;text-transform:uppercase;font-family:var(--pixel);line-height:1.5;text-shadow:2px 2px 0 var(--line);}
+  .brand h1 .v{color:var(--blue);}
+  .brand .sub{font-size:9px;color:var(--muted);font-family:var(--pixel);letter-spacing:.02em;text-transform:uppercase;line-height:1.7;}
+
+  nav.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px;margin-bottom:18px;position:sticky;top:0;z-index:5;}
+  nav.tabs button{
+    flex:1;background:transparent;border:none;color:var(--muted);font-family:var(--pixel);
+    font-size:9px;letter-spacing:.02em;text-transform:uppercase;padding:12px 4px;border-radius:6px;cursor:pointer;
+    transition:background .15s,color .15s;line-height:1.4;
+  }
+  nav.tabs button.active{background:var(--red);color:#0a0a0f;box-shadow:0 0 16px var(--red-glow);}
+  nav.tabs button:not(.active):hover{color:var(--text);background:var(--panel2);}
+  nav.tabs button:nth-child(2).active,nav.tabs button:nth-child(3).active{background:var(--blue);box-shadow:0 0 16px var(--blue-glow);}
+
+  .view{display:none;}
+  .view.active{display:block;animation:fade .18s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;position:relative;}
+  .card::before{content:'';position:absolute;top:0;left:14px;right:14px;height:2px;background:linear-gradient(90deg,var(--red),var(--blue));}
+  .card h2{margin:0 0 14px;font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:var(--red);font-family:var(--pixel);display:flex;align-items:center;gap:8px;line-height:1.6;}
+  .card h2 .n{color:var(--muted);font-weight:400;}
+
+  label{display:block;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-family:var(--pixel);margin-bottom:7px;line-height:1.5;}
+  input[type=text],input[type=number],input[type=date],select{
+    width:100%;background:#000000;border:1px solid var(--line);color:var(--text);
+    padding:10px 11px;border-radius:6px;font-size:14px;font-family:var(--sans);outline:none;
+  }
+  input:focus,select:focus{border-color:var(--blue);}
+  .row{display:flex;gap:10px;}
+  .row > *{flex:1;}
+  .field{margin-bottom:12px;}
+
+  .btn{
+    background:var(--red);color:#0a0a0f;border:none;border-radius:6px;padding:12px 14px;
+    font-family:var(--pixel);font-size:9px;letter-spacing:.02em;text-transform:uppercase;cursor:pointer;
+    transition:background .12s,box-shadow .12s;line-height:1.6;
+  }
+  .btn:hover{background:#ff3b2f;box-shadow:0 0 14px var(--red-glow);}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);}
+  .btn.ghost:hover{border-color:var(--blue);color:var(--text);}
+  .btn.small{padding:8px 10px;font-size:8px;}
+  .btn.blue{background:var(--blue);}
+  .btn.blue:hover{background:#3a85ff;box-shadow:0 0 14px var(--blue-glow);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  .ing-list{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:6px;}
+  .ing-list li{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    background:var(--panel2);border:1px solid var(--line);border-left:2px solid var(--blue);border-radius:6px;padding:9px 11px;font-size:13px;
+  }
+  .ing-list li .nm{font-weight:700;}
+  .ing-list li .mac{color:var(--muted);font-family:var(--mono);font-size:10.5px;}
+  .ing-list li button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;}
+  .ing-list li button:hover{color:var(--bad);}
+  .empty{color:var(--muted);font-size:12.5px;font-style:italic;padding:8px 0;}
+
+  .totals-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:4px;}
+  .tstat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:11px 5px;text-align:center;}
+  .tstat .v{font-family:var(--pixel);font-size:12px;color:var(--blue);line-height:1.4;}
+  .tstat .l{font-size:8px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:6px;font-family:var(--pixel);line-height:1.4;}
+
+  .bar-row{margin-bottom:12px;}
+  .bar-row .bhead{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-bottom:4px;font-weight:700;}
+  .bar-row .bhead .lab{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+  .bar-row .bhead .val{color:var(--text);}
+  .bar-track{height:9px;background:#000;border:1px solid var(--line);border-radius:0;overflow:hidden;position:relative;image-rendering:pixelated;}
+  .bar-fill{height:100%;border-radius:0;transition:width .3s;position:absolute;top:0;left:0;
+    background-image:linear-gradient(90deg,rgba(0,0,0,.18) 25%,transparent 25%,transparent 50%,rgba(0,0,0,.18) 50%,rgba(0,0,0,.18) 75%,transparent 75%);
+    background-size:8px 8px;}
+
+  .day-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  .day-nav .dtxt{font-family:var(--pixel);font-size:10px;letter-spacing:0;text-align:center;flex:1;text-transform:uppercase;line-height:1.6;}
+  .day-nav .dtxt .score{display:block;font-size:9px;color:var(--blue);margin-top:6px;text-transform:none;font-family:var(--mono);font-weight:700;}
+
+  .meal-item{background:var(--panel2);border:1px solid var(--line);border-left:2px solid var(--blue);border-radius:8px;padding:11px 13px;margin-bottom:8px;}
+  .meal-item .mh{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .meal-item .mh .nm{font-weight:700;font-size:13.5px;}
+  .meal-item .mh .nm .type-badge{font-family:var(--pixel);font-size:7.5px;color:var(--blue);text-transform:uppercase;letter-spacing:0;display:inline-block;margin-right:2px;}
+  .meal-item .mh .tm{color:var(--muted);font-family:var(--mono);font-size:10.5px;}
+  .meal-item .mm{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:5px;}
+  .meal-item .del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;}
+  .meal-item .del:hover{color:var(--bad);}
+  .meal-item .edit{background:none;border:none;color:var(--blue);cursor:pointer;font-size:13px;font-weight:700;}
+  .meal-item .edit:hover{color:#5c9fff;}
+
+  .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:3px;margin-bottom:14px;}
+  .seg button{flex:1;background:none;border:none;color:var(--muted);font-family:var(--pixel);font-size:8.5px;letter-spacing:.02em;text-transform:uppercase;padding:10px 4px;border-radius:6px;cursor:pointer;line-height:1.4;}
+  .seg button.active{background:var(--blue);color:#0a0a0f;}
+
+  .best-banner{
+    display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,rgba(30,111,255,.14),transparent);
+    border:1px solid var(--blue-dim);border-radius:8px;padding:11px 13px;margin-bottom:12px;font-family:var(--mono);font-size:11.5px;
+  }
+  .best-banner .ic{font-size:17px;}
+  .best-banner b{color:var(--blue);}
+
+  .daybar{display:flex;align-items:flex-end;gap:5px;height:120px;margin:10px 0 6px;}
+  .daybar .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;}
+  .daybar .col .bar{width:100%;border-radius:0;background:var(--line);position:relative;min-height:2px;}
+  .daybar .col .bar.filled{background:var(--blue);}
+  .daybar .col .lb{font-size:8px;color:var(--muted);font-family:var(--pixel);}
+
+  .foot-note{font-size:8.5px;color:var(--muted);text-align:center;margin-top:20px;font-family:var(--pixel);letter-spacing:.02em;text-transform:uppercase;line-height:1.8;}
+
+  .toast{
+    position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--blue);color:#0a0a0f;padding:12px 18px;border-radius:6px;font-family:var(--pixel);
+    font-size:9px;letter-spacing:.02em;text-transform:uppercase;box-shadow:0 6px 20px rgba(0,0,0,.5);opacity:0;pointer-events:none;
+    transition:opacity .2s,transform .2s;z-index:50;line-height:1.6;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  select option{background:#000;}
+  ::placeholder{color:#4a4650;}
+
+  .combo{position:relative;}
+  .combo input{padding-right:34px;}
+  .combo .clear{position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;display:none;}
+  .combo .clear.show{display:block;}
+  .suggestions{
+    position:absolute;left:0;right:0;top:calc(100% + 5px);background:#0d0d13;border:1px solid var(--line);
+    border-radius:8px;max-height:290px;overflow-y:auto;z-index:20;box-shadow:0 10px 30px rgba(0,0,0,.6);display:none;
+  }
+  .suggestions.show{display:block;}
+  .suggestions .grp{padding:7px 12px 4px;font-family:var(--pixel);font-size:8px;letter-spacing:.02em;text-transform:uppercase;color:var(--blue);line-height:1.6;}
+  .suggestions .opt{padding:9px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;}
+  .suggestions .opt:hover,.suggestions .opt.hi{background:var(--panel2);}
+  .suggestions .opt .macs{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap;}
+  .suggestions .none{padding:14px 12px;color:var(--muted);font-size:12.5px;font-style:italic;text-align:center;}
+  .sel-tag{display:none;align-items:center;justify-content:space-between;gap:8px;background:var(--panel2);border:1px solid var(--blue-dim);border-radius:6px;padding:9px 11px;margin-top:8px;font-size:12.5px;}
+  .sel-tag.show{display:flex;}
+  .sel-tag button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;}
+  .sel-tag button:hover{color:var(--bad);}
+  @media(max-width:520px){
+
+    .totals-grid{grid-template-columns:repeat(3,1fr);}
+    .totals-grid .tstat:nth-child(4),.totals-grid .tstat:nth-child(5){grid-column:span 1;}
+  }
+</style>
+</head>
+<body>
+<svg class="web-bg" viewBox="0 0 900 900" preserveAspectRatio="xMidYMid slice">
+  <g stroke="#e2231a" stroke-width="1" fill="none">
+    <circle cx="450" cy="0" r="120"/><circle cx="450" cy="0" r="240"/><circle cx="450" cy="0" r="380"/><circle cx="450" cy="0" r="520"/>
+    <line x1="450" y1="0" x2="0" y2="520"/><line x1="450" y1="0" x2="220" y2="900"/><line x1="450" y1="0" x2="450" y2="900"/>
+    <line x1="450" y1="0" x2="680" y2="900"/><line x1="450" y1="0" x2="900" y2="520"/>
+  </g>
+</svg>
+
+<div class="ticker"><div class="ticker-track">🕷 MACRO TRACKER SYSTEM — SPIDER NUTRITION ● OBJECTIF 2600 KCAL/JOUR ● 150–165G PROTÉINES ● RÉPARTITION PROT/GLUC/LIP ● CRÉATINE 5G/JOUR ● MILKSHAKE GREENWHEY FRAISE POST-SÉANCE ● LOG CHAQUE PLAT ● 🕷 MACRO TRACKER SYSTEM — SPIDER NUTRITION ● OBJECTIF 2600 KCAL/JOUR ● 150–165G PROTÉINES ● RÉPARTITION PROT/GLUC/LIP ● CRÉATINE 5G/JOUR ● MILKSHAKE GREENWHEY FRAISE POST-SÉANCE ● LOG CHAQUE PLAT ● </div></div>
+
+<div class="wrap">
+<div class="inner">
+  <header class="top">
+    <div class="brand">
+      <span class="tag">🕷 Spider Training System</span>
+      <h1>Macro <span class="v">Tracker</span></h1>
+      <span class="sub">Objectif 2600 kcal · 150–165g protéines/j</span>
+    </div>
+    <button class="btn ghost small" id="resetBtn" title="Effacer tout l'historique">✕ Reset</button>
+  </header>
+
+  <nav class="tabs">
+    <button data-view="builder" class="active">Plat</button>
+    <button data-view="day">Journée</button>
+    <button data-view="history">Historique</button>
+  </nav>
+
+  <!-- ===================== PLAT BUILDER ===================== -->
+  <section class="view active" id="view-builder">
+    <div class="card" id="mealMetaCard">
+      <h2>1️⃣ Quel repas ?</h2>
+      <div class="row">
+        <div class="field" style="flex:1;">
+          <label>Repas</label>
+          <select id="mealType">
+            <option value="petit-dejeuner">🌅 Petit-déjeuner</option>
+            <option value="dejeuner">☀️ Déjeuner</option>
+            <option value="diner">🌙 Dîner</option>
+            <option value="collation">🍎 Collation</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;"><label>Date</label><input type="date" id="mealDate"></div>
+      </div>
+      <div class="best-banner" id="editBanner" style="display:none;">
+        <span class="ic">✎</span><span>Modification d'un plat déjà enregistré — <b>enregistrer</b> mettra à jour ce plat.</span>
+        <button class="btn ghost small" id="cancelEditBtn" style="margin-left:auto;">Annuler</button>
+      </div>
+    </div>
+
+    <div class="card" id="progressCard">
+      <h2>⚡ Progression du jour <span class="n" id="progressDateLabel"></span></h2>
+      <div id="progressBars"></div>
+      <div class="foot-note" id="progressNote" style="margin-top:2px;text-align:left;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Ajouter un ingrédient</h2>
+      <div class="row">
+        <div class="field combo" style="flex:2;">
+          <label>Aliment <span style="text-transform:none;letter-spacing:0;color:var(--muted);">(tape pour chercher — plats, boissons, snacks...)</span></label>
+          <input type="text" id="foodSearch" placeholder="ex. poulet, coca zéro, sirop, riz..." autocomplete="off">
+          <button class="clear" id="clearSearch">✕</button>
+          <div class="suggestions" id="foodSuggestions"></div>
+        </div>
+        <div class="field" style="flex:1;">
+          <label>Grammes / ml</label>
+          <input type="number" id="foodGrams" min="0" step="1" placeholder="ex. 150">
+        </div>
+      </div>
+      <div class="sel-tag" id="selTag"><span id="selTagText"></span><button id="selTagClear">✕</button></div>
+      <button class="btn" id="addIngBtn" style="margin-top:10px;">+ Ajouter au plat</button>
+    </div>
+
+    <div class="card">
+      <h2>🍽 Ma base d'aliments <span class="n" id="customCount"></span></h2>
+      <div class="foot-note" style="margin-top:0;margin-bottom:10px;text-align:left;">Aliment introuvable dans la recherche ? Ajoute-le ici avec ses macros pour 100g / 100ml — il apparaîtra ensuite dans la recherche comme n'importe quel autre aliment.</div>
+      <div class="field"><label>Nom de l'aliment</label><input type="text" id="cfName" placeholder="ex. Barre protéinée maison, plat cuisiné X..."></div>
+      <div class="row">
+        <div class="field"><label>Kcal /100g</label><input type="number" id="cfKcal" min="0"></div>
+        <div class="field"><label>Prot. /100g</label><input type="number" id="cfProt" min="0"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Gluc. /100g</label><input type="number" id="cfCarbs" min="0"></div>
+        <div class="field"><label>Lip. /100g</label><input type="number" id="cfFat" min="0"></div>
+        <div class="field"><label>Fibres /100g</label><input type="number" id="cfFiber" min="0"></div>
+      </div>
+      <button class="btn blue" id="saveCustomFood">+ Ajouter à ma base</button>
+      <ul class="ing-list" id="customFoodList" style="margin-top:14px;"></ul>
+      <div class="empty" id="customFoodEmpty">Aucun aliment personnalisé ajouté pour l'instant.</div>
+    </div>
+
+    <div class="card">
+      <h2>Composition du plat <span class="n" id="ingCount"></span></h2>
+      <ul class="ing-list" id="ingList"></ul>
+      <div class="empty" id="ingEmpty">Aucun ingrédient ajouté pour l'instant.</div>
+      <div class="totals-grid">
+        <div class="tstat"><div class="v" id="bKcal">0</div><div class="l">Kcal</div></div>
+        <div class="tstat"><div class="v" id="bProt">0g</div><div class="l">Prot.</div></div>
+        <div class="tstat"><div class="v" id="bCarbs">0g</div><div class="l">Gluc.</div></div>
+        <div class="tstat"><div class="v" id="bFat">0g</div><div class="l">Lip.</div></div>
+        <div class="tstat"><div class="v" id="bFiber">0g</div><div class="l">Fibres</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Enregistrer le plat</h2>
+      <div class="field"><label>Nom du plat</label><input type="text" id="mealName" placeholder="ex. Poulet riz brocolis"></div>
+      <button class="btn" id="saveMealBtn">✓ Enregistrer dans le journal</button>
+    </div>
+  </section>
+
+  <!-- ===================== DAY VIEW ===================== -->
+  <section class="view" id="view-day">
+    <div class="card">
+      <div class="day-nav">
+        <button class="btn ghost small" id="prevDay">‹</button>
+        <div class="dtxt"><span id="dayLabel">—</span><span class="score" id="dayScore"></span></div>
+        <button class="btn ghost small" id="nextDay">›</button>
+      </div>
+      <div id="dayBars"></div>
+    </div>
+    <div class="card">
+      <h2>Repas du jour <span class="n" id="dayMealCount"></span></h2>
+      <div id="dayMeals"></div>
+      <div class="empty" id="dayEmpty">Aucun repas enregistré ce jour-là.</div>
+    </div>
+  </section>
+
+  <!-- ===================== HISTORY ===================== -->
+  <section class="view" id="view-history">
+    <div class="seg">
+      <button data-period="week" class="active">Semaine</button>
+      <button data-period="month">Mois</button>
+    </div>
+    <div class="card">
+      <div class="day-nav">
+        <button class="btn ghost small" id="prevPeriod">‹</button>
+        <div class="dtxt" id="periodLabel">—</div>
+        <button class="btn ghost small" id="nextPeriod">›</button>
+      </div>
+      <div class="daybar" id="periodChart"></div>
+    </div>
+    <div class="card" id="bestCard" style="display:none;"></div>
+    <div class="card">
+      <h2>Moyenne journalière sur la période</h2>
+      <div id="periodBars"></div>
+    </div>
+  </section>
+
+  <div class="foot-note">🕷 Traque tes macros, deviens plus fort chaque jour 🕷</div>
+</div>
+</div>
+
+<div class="ticker blue"><div class="ticker-track">🕷 BRAND NEW DAY — WITH GREAT POWER COMES GREAT RESPONSIBILITY ● RESTE CONSISTENT ● LOG CHAQUE PLAT ● 2600 KCAL/JOUR ● 150–165G PROTÉINES ● 🕷 BRAND NEW DAY — WITH GREAT POWER COMES GREAT RESPONSIBILITY ● RESTE CONSISTENT ● LOG CHAQUE PLAT ● 2600 KCAL/JOUR ● 150–165G PROTÉINES ● </div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ DATA ============ */
+const TARGET = { kcal:2600, prot:157.5, carbs:325, fat:80, fiber:30 };
+
+const FOOD_DB = [
+// ===== VIANDES / VOLAILLE =====
+{id:'poulet_blanc',cat:'Viandes',name:'Poulet (blanc / poitrine)',kcal:165,prot:31,carbs:0,fat:3.6,fiber:0},
+{id:'poulet_cuisse_p',cat:'Viandes',name:'Poulet cuisse avec peau',kcal:209,prot:18,carbs:0,fat:15,fiber:0},
+{id:'poulet_cuisse_sp',cat:'Viandes',name:'Poulet cuisse sans peau',kcal:172,prot:24,carbs:0,fat:8,fiber:0},
+{id:'dinde_blanc',cat:'Viandes',name:'Dinde (blanc)',kcal:135,prot:29,carbs:0,fat:1.7,fiber:0},
+{id:'boeuf5',cat:'Viandes',name:'Bœuf haché 5% MG',kcal:137,prot:21,carbs:0,fat:5,fiber:0},
+{id:'boeuf15',cat:'Viandes',name:'Bœuf haché 15% MG',kcal:212,prot:19,carbs:0,fat:15,fiber:0},
+{id:'boeuf20',cat:'Viandes',name:'Bœuf haché 20% MG',kcal:254,prot:17,carbs:0,fat:20,fiber:0},
+{id:'entrecote',cat:'Viandes',name:'Entrecôte de bœuf',kcal:271,prot:26,carbs:0,fat:18,fiber:0},
+{id:'bavette',cat:'Viandes',name:'Bavette de bœuf',kcal:163,prot:21,carbs:0,fat:8,fiber:0},
+{id:'porc_filet',cat:'Viandes',name:'Filet mignon de porc',kcal:143,prot:21,carbs:0,fat:6,fiber:0},
+{id:'porc_cote',cat:'Viandes',name:'Côte de porc',kcal:231,prot:23,carbs:0,fat:15,fiber:0},
+{id:'jambon_blanc',cat:'Viandes',name:'Jambon blanc',kcal:107,prot:20,carbs:1,fat:2.5,fiber:0},
+{id:'jambon_cru',cat:'Viandes',name:'Jambon cru',kcal:195,prot:25,carbs:0,fat:10,fiber:0},
+{id:'lardons',cat:'Viandes',name:'Lardons',kcal:235,prot:17,carbs:0,fat:18,fiber:0},
+{id:'bacon',cat:'Viandes',name:'Bacon',kcal:541,prot:37,carbs:1.4,fat:42,fiber:0},
+{id:'saucisse_toulouse',cat:'Viandes',name:'Saucisse de Toulouse',kcal:300,prot:13,carbs:1,fat:27,fiber:0},
+{id:'chorizo',cat:'Viandes',name:'Chorizo',kcal:455,prot:24,carbs:2,fat:38,fiber:0},
+{id:'merguez',cat:'Viandes',name:'Merguez',kcal:300,prot:16,carbs:1,fat:26,fiber:0},
+{id:'agneau',cat:'Viandes',name:'Agneau (gigot)',kcal:217,prot:25,carbs:0,fat:13,fiber:0},
+{id:'canard',cat:'Viandes',name:'Magret de canard',kcal:201,prot:19,carbs:0,fat:13,fiber:0},
+{id:'lapin',cat:'Viandes',name:'Lapin',kcal:173,prot:21,carbs:0,fat:8,fiber:0},
+{id:'foie_veau',cat:'Viandes',name:'Foie de veau',kcal:141,prot:20,carbs:4,fat:4.5,fiber:0},
+// ===== POISSONS / FRUITS DE MER =====
+{id:'saumon',cat:'Poissons',name:'Saumon',kcal:208,prot:20,carbs:0,fat:13,fiber:0},
+{id:'saumon_fume',cat:'Poissons',name:'Saumon fumé',kcal:117,prot:18,carbs:0,fat:4.5,fiber:0},
+{id:'thon_nat',cat:'Poissons',name:'Thon au naturel (boîte)',kcal:116,prot:26,carbs:0,fat:1,fiber:0},
+{id:'thon_huile',cat:'Poissons',name:'Thon à l\'huile (boîte, égoutté)',kcal:189,prot:24,carbs:0,fat:9,fiber:0},
+{id:'thon_frais',cat:'Poissons',name:'Thon frais (steak)',kcal:144,prot:23,carbs:0,fat:5,fiber:0},
+{id:'cabillaud',cat:'Poissons',name:'Cabillaud',kcal:82,prot:18,carbs:0,fat:0.7,fiber:0},
+{id:'colin',cat:'Poissons',name:'Colin / Lieu',kcal:90,prot:17,carbs:0,fat:1.5,fiber:0},
+{id:'sole',cat:'Poissons',name:'Sole',kcal:86,prot:17,carbs:0,fat:1.5,fiber:0},
+{id:'truite',cat:'Poissons',name:'Truite',kcal:148,prot:20,carbs:0,fat:7,fiber:0},
+{id:'sardines',cat:'Poissons',name:'Sardines à l\'huile (boîte)',kcal:208,prot:25,carbs:0,fat:11,fiber:0},
+{id:'maquereau',cat:'Poissons',name:'Maquereau',kcal:205,prot:19,carbs:0,fat:13,fiber:0},
+{id:'crevettes',cat:'Poissons',name:'Crevettes',kcal:99,prot:24,carbs:0.2,fat:0.3,fiber:0},
+{id:'moules',cat:'Poissons',name:'Moules',kcal:86,prot:12,carbs:3.4,fat:2.2,fiber:0},
+{id:'calamars',cat:'Poissons',name:'Calamars',kcal:92,prot:16,carbs:3,fat:1.4,fiber:0},
+{id:'stjacques',cat:'Poissons',name:'Saint-Jacques',kcal:88,prot:17,carbs:2,fat:1,fiber:0},
+{id:'surimi',cat:'Poissons',name:'Surimi',kcal:95,prot:9,carbs:12,fat:0.5,fiber:0},
+// ===== ŒUFS / LAITIERS =====
+{id:'oeuf',cat:'Œufs & Laitier',name:'Œuf entier',kcal:155,prot:13,carbs:1.1,fat:11,fiber:0},
+{id:'blanc_oeuf',cat:'Œufs & Laitier',name:'Blanc d\'œuf',kcal:52,prot:11,carbs:0.7,fat:0.2,fiber:0},
+{id:'lait_demiecreme',cat:'Œufs & Laitier',name:'Lait demi-écrémé',kcal:46,prot:3.3,carbs:4.8,fat:1.6,fiber:0},
+{id:'lait_entier',cat:'Œufs & Laitier',name:'Lait entier',kcal:64,prot:3.2,carbs:4.8,fat:3.6,fiber:0},
+{id:'lait_ecreme',cat:'Œufs & Laitier',name:'Lait écrémé',kcal:35,prot:3.4,carbs:5,fat:0.1,fiber:0},
+{id:'lait_amande',cat:'Œufs & Laitier',name:'Lait d\'amande (non sucré)',kcal:13,prot:0.5,carbs:0.3,fat:1.1,fiber:0.3},
+{id:'lait_avoine',cat:'Œufs & Laitier',name:'Lait d\'avoine',kcal:45,prot:1,carbs:7,fat:1.5,fiber:0.8},
+{id:'lait_soja',cat:'Œufs & Laitier',name:'Lait de soja',kcal:33,prot:3.3,carbs:1,fat:1.8,fiber:0.6},
+{id:'skyr',cat:'Œufs & Laitier',name:'Skyr nature',kcal:63,prot:11,carbs:4,fat:0.2,fiber:0},
+{id:'fromageblanc0',cat:'Œufs & Laitier',name:'Fromage blanc 0%',kcal:45,prot:8,carbs:4,fat:0.2,fiber:0},
+{id:'fromageblanc3',cat:'Œufs & Laitier',name:'Fromage blanc 3%',kcal:68,prot:7,carbs:4,fat:3,fiber:0},
+{id:'yaourt_nature',cat:'Œufs & Laitier',name:'Yaourt nature',kcal:61,prot:3.5,carbs:4.7,fat:3.3,fiber:0},
+{id:'yaourtgrec',cat:'Œufs & Laitier',name:'Yaourt grec',kcal:97,prot:9,carbs:4,fat:5,fiber:0},
+{id:'yaourt0',cat:'Œufs & Laitier',name:'Yaourt 0%',kcal:43,prot:4.5,carbs:5.5,fat:0.1,fiber:0},
+{id:'petitsuisse',cat:'Œufs & Laitier',name:'Petit-suisse',kcal:100,prot:8,carbs:4,fat:6,fiber:0},
+{id:'emmental',cat:'Œufs & Laitier',name:'Emmental',kcal:380,prot:28,carbs:0.4,fat:30,fiber:0},
+{id:'comte',cat:'Œufs & Laitier',name:'Comté',kcal:412,prot:28,carbs:0,fat:32,fiber:0},
+{id:'camembert',cat:'Œufs & Laitier',name:'Camembert',kcal:300,prot:20,carbs:0.5,fat:24,fiber:0},
+{id:'chevre',cat:'Œufs & Laitier',name:'Fromage de chèvre (bûche)',kcal:290,prot:19,carbs:2,fat:23,fiber:0},
+{id:'mozzarella',cat:'Œufs & Laitier',name:'Mozzarella',kcal:280,prot:22,carbs:2,fat:22,fiber:0},
+{id:'feta',cat:'Œufs & Laitier',name:'Feta',kcal:264,prot:14,carbs:4,fat:21,fiber:0},
+{id:'ricotta',cat:'Œufs & Laitier',name:'Ricotta',kcal:174,prot:11,carbs:3,fat:13,fiber:0},
+{id:'cottage',cat:'Œufs & Laitier',name:'Fromage cottage',kcal:98,prot:11,carbs:3.4,fat:4.3,fiber:0},
+{id:'creme30',cat:'Œufs & Laitier',name:'Crème fraîche épaisse 30%',kcal:292,prot:2.2,carbs:3,fat:30,fiber:0},
+{id:'creme15',cat:'Œufs & Laitier',name:'Crème fraîche légère 15%',kcal:155,prot:3,carbs:4,fat:15,fiber:0},
+{id:'beurre',cat:'Œufs & Laitier',name:'Beurre',kcal:717,prot:0.9,carbs:0.1,fat:81,fiber:0},
+{id:'margarine',cat:'Œufs & Laitier',name:'Margarine',kcal:720,prot:0.3,carbs:0.5,fat:80,fiber:0},
+// ===== FÉCULENTS / CÉRÉALES =====
+{id:'riz',cat:'Féculents',name:'Riz blanc cuit',kcal:130,prot:2.7,carbs:28,fat:0.3,fiber:0.4},
+{id:'basmati',cat:'Féculents',name:'Riz basmati cuit',kcal:121,prot:2.5,carbs:25,fat:0.4,fiber:0.5},
+{id:'riz_complet',cat:'Féculents',name:'Riz complet cuit',kcal:111,prot:2.6,carbs:23,fat:0.9,fiber:1.8},
+{id:'pates',cat:'Féculents',name:'Pâtes blanches cuites',kcal:158,prot:5.8,carbs:31,fat:0.9,fiber:1.8},
+{id:'pates_completes',cat:'Féculents',name:'Pâtes complètes cuites',kcal:124,prot:5,carbs:25,fat:1.1,fiber:3.5},
+{id:'semoule',cat:'Féculents',name:'Semoule cuite',kcal:112,prot:3.8,carbs:23,fat:0.2,fiber:1.5},
+{id:'quinoa',cat:'Féculents',name:'Quinoa cuit',kcal:120,prot:4.4,carbs:21,fat:1.9,fiber:2.8},
+{id:'boulgour',cat:'Féculents',name:'Boulgour cuit',kcal:83,prot:3,carbs:19,fat:0.2,fiber:4.5},
+{id:'pain_blanc',cat:'Féculents',name:'Pain blanc',kcal:265,prot:9,carbs:49,fat:3.2,fiber:2.7},
+{id:'painc',cat:'Féculents',name:'Pain complet',kcal:247,prot:13,carbs:41,fat:3.4,fiber:7},
+{id:'pdm_blanc',cat:'Féculents',name:'Pain de mie blanc',kcal:264,prot:8,carbs:50,fat:3.3,fiber:2.3},
+{id:'pdm_complet',cat:'Féculents',name:'Pain de mie complet',kcal:235,prot:10,carbs:40,fat:3.5,fiber:6},
+{id:'baguette',cat:'Féculents',name:'Baguette',kcal:274,prot:9,carbs:56,fat:1,fiber:2.7},
+{id:'pain_cereales',cat:'Féculents',name:'Pain aux céréales',kcal:260,prot:10,carbs:45,fat:4,fiber:6},
+{id:'avoine',cat:'Féculents',name:"Flocons d'avoine",kcal:389,prot:17,carbs:66,fat:7,fiber:10},
+{id:'muesli',cat:'Féculents',name:'Muesli',kcal:375,prot:10,carbs:65,fat:6,fiber:8},
+{id:'cornflakes',cat:'Féculents',name:'Corn flakes',kcal:378,prot:7,carbs:84,fat:0.9,fiber:3},
+{id:'pdt',cat:'Féculents',name:'Pomme de terre cuite',kcal:87,prot:2,carbs:20,fat:0.1,fiber:1.8},
+{id:'pdt_vapeur',cat:'Féculents',name:'Pomme de terre vapeur',kcal:77,prot:1.7,carbs:17,fat:0.1,fiber:1.5},
+{id:'frites_four',cat:'Féculents',name:'Frites au four',kcal:280,prot:3.4,carbs:41,fat:12,fiber:3.6},
+{id:'puree',cat:'Féculents',name:'Purée de pomme de terre',kcal:85,prot:2,carbs:16,fat:1,fiber:1},
+{id:'pdouce',cat:'Féculents',name:'Patate douce cuite',kcal:90,prot:2,carbs:21,fat:0.2,fiber:3},
+{id:'lentilles',cat:'Féculents',name:'Lentilles cuites',kcal:116,prot:9,carbs:20,fat:0.4,fiber:8},
+{id:'lentilles_corail',cat:'Féculents',name:'Lentilles corail cuites',kcal:100,prot:7,carbs:17,fat:0.4,fiber:4},
+{id:'poischiche',cat:'Féculents',name:'Pois chiches cuits',kcal:164,prot:9,carbs:27,fat:2.6,fiber:8},
+{id:'haricotrouge',cat:'Féculents',name:'Haricots rouges cuits',kcal:127,prot:9,carbs:23,fat:0.5,fiber:6},
+{id:'haricotblanc',cat:'Féculents',name:'Haricots blancs cuits',kcal:139,prot:9,carbs:25,fat:0.5,fiber:6},
+{id:'poiscasse',cat:'Féculents',name:'Pois cassés cuits',kcal:118,prot:8,carbs:21,fat:0.4,fiber:8},
+// ===== LÉGUMES =====
+{id:'brocoli',cat:'Légumes',name:'Brocoli cuit',kcal:35,prot:2.4,carbs:7,fat:0.4,fiber:3.3},
+{id:'haricotvert',cat:'Légumes',name:'Haricots verts',kcal:31,prot:1.8,carbs:7,fat:0.1,fiber:3.4},
+{id:'courgette',cat:'Légumes',name:'Courgette cuite',kcal:17,prot:1.2,carbs:3,fat:0.3,fiber:1},
+{id:'carotte_cuite',cat:'Légumes',name:'Carotte cuite',kcal:35,prot:0.9,carbs:8,fat:0.2,fiber:2.8},
+{id:'carotte_crue',cat:'Légumes',name:'Carotte crue',kcal:41,prot:0.9,carbs:10,fat:0.2,fiber:2.8},
+{id:'tomate',cat:'Légumes',name:'Tomate',kcal:18,prot:0.9,carbs:3.9,fat:0.2,fiber:1.2},
+{id:'concombre',cat:'Légumes',name:'Concombre',kcal:15,prot:0.7,carbs:3.6,fat:0.1,fiber:0.5},
+{id:'salade',cat:'Légumes',name:'Salade verte',kcal:15,prot:1.4,carbs:2.9,fat:0.2,fiber:1.3},
+{id:'poivron',cat:'Légumes',name:'Poivron',kcal:31,prot:1,carbs:6,fat:0.3,fiber:2.1},
+{id:'epinards',cat:'Légumes',name:'Épinards cuits',kcal:23,prot:2.9,carbs:3.6,fat:0.4,fiber:2.2},
+{id:'choufleur',cat:'Légumes',name:'Chou-fleur cuit',kcal:25,prot:1.9,carbs:5,fat:0.3,fiber:2},
+{id:'aubergine',cat:'Légumes',name:'Aubergine cuite',kcal:25,prot:1,carbs:6,fat:0.2,fiber:2.5},
+{id:'champignons',cat:'Légumes',name:'Champignons de Paris',kcal:22,prot:3.1,carbs:3.3,fat:0.3,fiber:1},
+{id:'petitspois',cat:'Légumes',name:'Petits pois',kcal:81,prot:5.4,carbs:14,fat:0.4,fiber:5.5},
+{id:'mais',cat:'Légumes',name:'Maïs doux',kcal:96,prot:3.4,carbs:19,fat:1.5,fiber:2.4},
+{id:'oignon',cat:'Légumes',name:'Oignon',kcal:40,prot:1.1,carbs:9.3,fat:0.1,fiber:1.7},
+// ===== FRUITS =====
+{id:'banane',cat:'Fruits',name:'Banane',kcal:89,prot:1.1,carbs:23,fat:0.3,fiber:2.6},
+{id:'pomme',cat:'Fruits',name:'Pomme',kcal:52,prot:0.3,carbs:14,fat:0.2,fiber:2.4},
+{id:'poire',cat:'Fruits',name:'Poire',kcal:57,prot:0.4,carbs:15,fat:0.1,fiber:3.1},
+{id:'orange',cat:'Fruits',name:'Orange',kcal:47,prot:0.9,carbs:12,fat:0.1,fiber:2.4},
+{id:'fraises',cat:'Fruits',name:'Fraises',kcal:32,prot:0.7,carbs:7.7,fat:0.3,fiber:2},
+{id:'framboises',cat:'Fruits',name:'Framboises',kcal:52,prot:1.2,carbs:12,fat:0.7,fiber:6.5},
+{id:'myrtilles',cat:'Fruits',name:'Myrtilles',kcal:57,prot:0.7,carbs:14,fat:0.3,fiber:2.4},
+{id:'raisin',cat:'Fruits',name:'Raisin',kcal:69,prot:0.6,carbs:18,fat:0.4,fiber:0.9},
+{id:'kiwi',cat:'Fruits',name:'Kiwi',kcal:61,prot:1.1,carbs:15,fat:0.5,fiber:3},
+{id:'ananas',cat:'Fruits',name:'Ananas',kcal:50,prot:0.5,carbs:13,fat:0.1,fiber:1.4},
+{id:'mangue',cat:'Fruits',name:'Mangue',kcal:60,prot:0.8,carbs:15,fat:0.4,fiber:1.6},
+{id:'pasteque',cat:'Fruits',name:'Pastèque',kcal:30,prot:0.6,carbs:8,fat:0.2,fiber:0.4},
+{id:'melon',cat:'Fruits',name:'Melon',kcal:34,prot:0.8,carbs:8,fat:0.2,fiber:0.9},
+{id:'peche',cat:'Fruits',name:'Pêche',kcal:39,prot:0.9,carbs:10,fat:0.3,fiber:1.5},
+{id:'abricot',cat:'Fruits',name:'Abricot',kcal:48,prot:1.4,carbs:11,fat:0.4,fiber:2},
+{id:'datte',cat:'Fruits',name:'Datte séchée',kcal:282,prot:2.5,carbs:75,fat:0.4,fiber:8},
+{id:'figue_seche',cat:'Fruits',name:'Figue séchée',kcal:249,prot:3.3,carbs:64,fat:0.9,fiber:9.8},
+{id:'raisin_sec',cat:'Fruits',name:'Raisins secs',kcal:299,prot:3.1,carbs:79,fat:0.5,fiber:3.7},
+{id:'avocat',cat:'Fruits',name:'Avocat',kcal:160,prot:2,carbs:9,fat:15,fiber:7},
+{id:'citron',cat:'Fruits',name:'Citron',kcal:29,prot:1.1,carbs:9,fat:0.3,fiber:2.8},
+// ===== OLÉAGINEUX / MATIÈRES GRASSES =====
+{id:'amandes',cat:'Oléagineux',name:'Amandes',kcal:579,prot:21,carbs:22,fat:50,fiber:12.5},
+{id:'noix',cat:'Oléagineux',name:'Noix',kcal:654,prot:15,carbs:14,fat:65,fiber:6.7},
+{id:'noisettes',cat:'Oléagineux',name:'Noisettes',kcal:628,prot:15,carbs:17,fat:61,fiber:9.7},
+{id:'cacahuetes',cat:'Oléagineux',name:'Cacahuètes',kcal:567,prot:25,carbs:16,fat:49,fiber:8.5},
+{id:'cajou',cat:'Oléagineux',name:'Noix de cajou',kcal:553,prot:18,carbs:30,fat:44,fiber:3.3},
+{id:'pistaches',cat:'Oléagineux',name:'Pistaches',kcal:562,prot:20,carbs:28,fat:45,fiber:10.6},
+{id:'cacahuete_beurre',cat:'Oléagineux',name:'Beurre de cacahuète',kcal:588,prot:25,carbs:20,fat:50,fiber:6},
+{id:'amande_puree',cat:'Oléagineux',name:'Purée d\'amande',kcal:614,prot:21,carbs:19,fat:56,fiber:10},
+{id:'huileolive',cat:'Oléagineux',name:"Huile d'olive",kcal:884,prot:0,carbs:0,fat:100,fiber:0},
+{id:'huilecolza',cat:'Oléagineux',name:'Huile de colza',kcal:884,prot:0,carbs:0,fat:100,fiber:0},
+{id:'huilecoco',cat:'Oléagineux',name:'Huile de coco',kcal:862,prot:0,carbs:0,fat:100,fiber:0},
+{id:'chia',cat:'Oléagineux',name:'Graines de chia',kcal:486,prot:17,carbs:42,fat:31,fiber:34},
+{id:'lin',cat:'Oléagineux',name:'Graines de lin',kcal:534,prot:18,carbs:29,fat:42,fiber:27},
+// ===== PROTÉINES / COMPLÉMENTS =====
+{id:'whey',cat:'Compléments',name:'Whey protéine (poudre)',kcal:380,prot:75,carbs:8,fat:5,fiber:1},
+{id:'whey_iso',cat:'Compléments',name:'Whey isolate (poudre)',kcal:370,prot:85,carbs:4,fat:2,fiber:0.5},
+{id:'caseine',cat:'Compléments',name:'Caséine (poudre)',kcal:360,prot:75,carbs:6,fat:3,fiber:0.5},
+{id:'barre_prot',cat:'Compléments',name:'Barre protéinée (moyenne)',kcal:370,prot:30,carbs:35,fat:12,fiber:4},
+{id:'tofu',cat:'Compléments',name:'Tofu',kcal:76,prot:8,carbs:1.9,fat:4.8,fiber:0.3},
+{id:'tofu_fume',cat:'Compléments',name:'Tofu fumé',kcal:155,prot:17,carbs:1,fat:9,fiber:0},
+{id:'tempeh',cat:'Compléments',name:'Tempeh',kcal:193,prot:19,carbs:9,fat:11,fiber:9},
+{id:'seitan',cat:'Compléments',name:'Seitan',kcal:370,prot:75,carbs:14,fat:1.9,fiber:0.6},
+// ===== BOISSONS (pour 100ml) =====
+{id:'eau',cat:'Boissons',name:'Eau (plate ou gazeuse)',kcal:0,prot:0,carbs:0,fat:0,fiber:0},
+{id:'coca',cat:'Boissons',name:'Coca-Cola',kcal:42,prot:0,carbs:10.6,fat:0,fiber:0},
+{id:'coca_zero',cat:'Boissons',name:'Coca-Cola Zéro / sans sucre',kcal:0.3,prot:0,carbs:0,fat:0,fiber:0},
+{id:'pepsi',cat:'Boissons',name:'Pepsi',kcal:43,prot:0,carbs:11,fat:0,fiber:0},
+{id:'pepsi_max',cat:'Boissons',name:'Pepsi Max (sans sucre)',kcal:0.4,prot:0,carbs:0.1,fat:0,fiber:0},
+{id:'fanta',cat:'Boissons',name:'Fanta Orange',kcal:44,prot:0,carbs:11,fat:0,fiber:0},
+{id:'fanta_zero',cat:'Boissons',name:'Fanta Zéro',kcal:2,prot:0,carbs:0.5,fat:0,fiber:0},
+{id:'sprite',cat:'Boissons',name:'Sprite',kcal:39,prot:0,carbs:10,fat:0,fiber:0},
+{id:'sprite_zero',cat:'Boissons',name:'Sprite Zéro',kcal:0.3,prot:0,carbs:0,fat:0,fiber:0},
+{id:'icetea',cat:'Boissons',name:'Ice Tea (sucré)',kcal:25,prot:0,carbs:6,fat:0,fiber:0},
+{id:'icetea_zero',cat:'Boissons',name:'Ice Tea Zéro / Light',kcal:1,prot:0,carbs:0.2,fat:0,fiber:0},
+{id:'redbull',cat:'Boissons',name:'Red Bull',kcal:45,prot:0,carbs:11,fat:0,fiber:0},
+{id:'redbull_zero',cat:'Boissons',name:'Red Bull sans sucre',kcal:3,prot:0.5,carbs:0.1,fat:0,fiber:0},
+{id:'monster',cat:'Boissons',name:'Monster Energy',kcal:47,prot:0,carbs:11,fat:0,fiber:0},
+{id:'monster_zero',cat:'Boissons',name:'Monster Ultra (sans sucre)',kcal:3,prot:0,carbs:0.5,fat:0,fiber:0},
+{id:'jus_orange',cat:'Boissons',name:'Jus d\'orange (pur jus)',kcal:45,prot:0.7,carbs:10,fat:0.2,fiber:0.2},
+{id:'jus_pomme',cat:'Boissons',name:'Jus de pomme',kcal:46,prot:0.1,carbs:11,fat:0.1,fiber:0.1},
+{id:'jus_raisin',cat:'Boissons',name:'Jus de raisin',kcal:60,prot:0.3,carbs:15,fat:0,fiber:0},
+{id:'jus_multifruits',cat:'Boissons',name:'Jus multifruits',kcal:45,prot:0.5,carbs:11,fat:0.1,fiber:0.2},
+{id:'sirop',cat:'Boissons',name:'Sirop (fraise, menthe... non dilué)',kcal:270,prot:0,carbs:68,fat:0,fiber:0},
+{id:'sirop_light',cat:'Boissons',name:'Sirop light / 0% sucre',kcal:8,prot:0,carbs:2,fat:0,fiber:0},
+{id:'cafe',cat:'Boissons',name:'Café noir (sans sucre)',kcal:1,prot:0.1,carbs:0,fat:0,fiber:0},
+{id:'the',cat:'Boissons',name:'Thé nature',kcal:1,prot:0,carbs:0.3,fat:0,fiber:0},
+{id:'lait_chocolate',cat:'Boissons',name:'Lait chocolaté (type Nesquik)',kcal:75,prot:3.4,carbs:11,fat:2,fiber:0.6},
+{id:'chocolat_chaud',cat:'Boissons',name:'Chocolat chaud (au lait)',kcal:90,prot:3.5,carbs:12,fat:3,fiber:1},
+{id:'biere',cat:'Boissons',name:'Bière (5°)',kcal:43,prot:0.5,carbs:3.6,fat:0,fiber:0},
+{id:'vin_rouge',cat:'Boissons',name:'Vin rouge',kcal:85,prot:0.1,carbs:2.6,fat:0,fiber:0},
+{id:'vin_blanc',cat:'Boissons',name:'Vin blanc',kcal:82,prot:0.1,carbs:2.6,fat:0,fiber:0},
+{id:'champagne',cat:'Boissons',name:'Champagne',kcal:76,prot:0.3,carbs:1.4,fat:0,fiber:0},
+{id:'alcool_fort',cat:'Boissons',name:'Alcool fort (whisky, vodka, rhum 40°)',kcal:231,prot:0,carbs:0,fat:0,fiber:0},
+{id:'isotonique',cat:'Boissons',name:'Boisson isotonique (type Isostar)',kcal:27,prot:0,carbs:6.5,fat:0,fiber:0},
+{id:'kombucha',cat:'Boissons',name:'Kombucha',kcal:30,prot:0,carbs:7,fat:0,fiber:0},
+{id:'lait_amande_sucre',cat:'Boissons',name:'Lait d\'amande sucré',kcal:42,prot:0.4,carbs:6.5,fat:1.3,fiber:0.3},
+{id:'smoothie',cat:'Boissons',name:'Smoothie fruits (moyenne)',kcal:60,prot:0.6,carbs:14,fat:0.2,fiber:1},
+// ===== SUCRERIES / SNACKS =====
+{id:'miel',cat:'Sucreries',name:'Miel',kcal:304,prot:0.3,carbs:82,fat:0,fiber:0.2},
+{id:'confiture',cat:'Sucreries',name:'Confiture',kcal:250,prot:0.3,carbs:62,fat:0.1,fiber:0.5},
+{id:'nutella',cat:'Sucreries',name:'Nutella / pâte à tartiner',kcal:539,prot:6,carbs:58,fat:31,fiber:3.4},
+{id:'chocolatnoir',cat:'Sucreries',name:'Chocolat noir 70%',kcal:598,prot:7.8,carbs:45,fat:42,fiber:11},
+{id:'chocolatlait',cat:'Sucreries',name:'Chocolat au lait',kcal:535,prot:7.6,carbs:57,fat:30,fiber:2.5},
+{id:'bonbons',cat:'Sucreries',name:'Bonbons (gummies)',kcal:340,prot:2,carbs:78,fat:0.3,fiber:0},
+{id:'chips',cat:'Sucreries',name:'Chips',kcal:536,prot:6.6,carbs:53,fat:34,fiber:4.5},
+{id:'popcorn',cat:'Sucreries',name:'Pop-corn (nature)',kcal:375,prot:11,carbs:74,fat:4,fiber:10},
+{id:'sables',cat:'Sucreries',name:'Biscuits sablés',kcal:480,prot:6,carbs:65,fat:22,fiber:2},
+{id:'croissant',cat:'Sucreries',name:'Croissant',kcal:406,prot:8,carbs:45,fat:21,fiber:2},
+{id:'painchoc',cat:'Sucreries',name:'Pain au chocolat',kcal:411,prot:8,carbs:44,fat:22,fiber:2.5},
+{id:'donut',cat:'Sucreries',name:'Donut',kcal:452,prot:5,carbs:51,fat:25,fiber:1.5},
+{id:'cookie',cat:'Sucreries',name:'Cookie',kcal:480,prot:5,carbs:62,fat:24,fiber:2},
+{id:'gateauyaourt',cat:'Sucreries',name:'Gâteau au yaourt',kcal:280,prot:5,carbs:40,fat:11,fiber:1},
+{id:'crepe',cat:'Sucreries',name:'Crêpe nature',kcal:220,prot:6,carbs:32,fat:7,fiber:1},
+{id:'glace',cat:'Sucreries',name:'Glace (vanille)',kcal:207,prot:3.5,carbs:24,fat:11,fiber:0.5},
+{id:'barrechoc',cat:'Sucreries',name:'Barre chocolatée (type Mars/Snickers)',kcal:460,prot:7,carbs:60,fat:20,fiber:2},
+// ===== FAST FOOD / PLATS =====
+{id:'pizza',cat:'Plats',name:'Pizza margherita (part)',kcal:266,prot:11,carbs:33,fat:10,fiber:2},
+{id:'burger',cat:'Plats',name:'Burger classique (fast food)',kcal:250,prot:13,carbs:30,fat:9,fiber:1.5},
+{id:'frites_ff',cat:'Plats',name:'Frites (fast food)',kcal:312,prot:3.4,carbs:41,fat:15,fiber:3.8},
+{id:'nuggets',cat:'Plats',name:'Nuggets de poulet',kcal:250,prot:14,carbs:16,fat:15,fiber:1},
+{id:'kebab',cat:'Plats',name:'Kebab (sandwich)',kcal:250,prot:12,carbs:25,fat:11,fiber:2},
+{id:'sushi',cat:'Plats',name:'Sushi (maki saumon, moyenne)',kcal:145,prot:6,carbs:28,fat:1,fiber:1},
+{id:'ratatouille',cat:'Plats',name:'Ratatouille',kcal:55,prot:1.3,carbs:6,fat:3,fiber:2.3},
+{id:'soupe',cat:'Plats',name:'Soupe de légumes',kcal:35,prot:1.5,carbs:6,fat:0.5,fiber:1.5},
+{id:'houmous',cat:'Plats',name:'Houmous',kcal:166,prot:8,carbs:14,fat:9,fiber:6},
+// ===== CONDIMENTS / SAUCES =====
+{id:'ketchup',cat:'Condiments',name:'Ketchup',kcal:101,prot:1.2,carbs:24,fat:0.2,fiber:0.3},
+{id:'mayo',cat:'Condiments',name:'Mayonnaise',kcal:680,prot:1.1,carbs:2.5,fat:75,fiber:0},
+{id:'moutarde',cat:'Condiments',name:'Moutarde',kcal:66,prot:4,carbs:5,fat:3.3,fiber:2},
+{id:'saucesoja',cat:'Condiments',name:'Sauce soja',kcal:53,prot:6,carbs:6,fat:0,fiber:0.8},
+{id:'vinaigrette',cat:'Condiments',name:'Vinaigrette (huile + vinaigre)',kcal:380,prot:0.3,carbs:2,fat:40,fiber:0},
+{id:'bbq',cat:'Condiments',name:'Sauce barbecue',kcal:172,prot:1,carbs:40,fat:0.5,fiber:0.5},
+{id:'bechamel',cat:'Condiments',name:'Sauce blanche / béchamel',kcal:90,prot:2.6,carbs:6,fat:6,fiber:0.2},
+{id:'pesto',cat:'Condiments',name:'Pesto',kcal:458,prot:5,carbs:6,fat:46,fiber:2},
+{id:'tzatziki',cat:'Condiments',name:'Tzatziki',kcal:75,prot:3.5,carbs:3.5,fat:5.5,fiber:0.3},
+{id:'guacamole',cat:'Condiments',name:'Guacamole',kcal:150,prot:2,carbs:6,fat:13,fiber:5},
+{id:'sauce_curry',cat:'Condiments',name:'Sauce curry',kcal:110,prot:1.5,carbs:8,fat:8,fiber:0.5},
+{id:'sauce_algerienne',cat:'Condiments',name:'Sauce algérienne',kcal:450,prot:1,carbs:8,fat:46,fiber:0},
+{id:'sauce_samourai',cat:'Condiments',name:'Sauce samouraï',kcal:420,prot:1,carbs:9,fat:42,fiber:0},
+{id:'sauce_soja_light',cat:'Condiments',name:'Sauce soja allégée en sel',kcal:43,prot:5,carbs:5,fat:0,fiber:0.6},
+// ===== POISSONS / FRUITS DE MER (suite) =====
+{id:'truite_fumee',cat:'Poissons',name:'Truite fumée',kcal:171,prot:23,carbs:0,fat:9,fiber:0},
+{id:'hareng',cat:'Poissons',name:'Hareng',kcal:158,prot:18,carbs:0,fat:9,fiber:0},
+{id:'hareng_fume',cat:'Poissons',name:'Hareng fumé (kipper)',kcal:217,prot:25,carbs:0,fat:13,fiber:0},
+{id:'anchois',cat:'Poissons',name:'Anchois à l\'huile',kcal:210,prot:29,carbs:0,fat:10,fiber:0},
+{id:'rouget',cat:'Poissons',name:'Rouget',kcal:120,prot:19,carbs:0,fat:4.5,fiber:0},
+{id:'bar',cat:'Poissons',name:'Bar / Loup de mer',kcal:97,prot:18,carbs:0,fat:2.5,fiber:0},
+{id:'daurade',cat:'Poissons',name:'Daurade',kcal:96,prot:20,carbs:0,fat:2,fiber:0},
+{id:'lieunoir',cat:'Poissons',name:'Lieu noir',kcal:87,prot:19,carbs:0,fat:1,fiber:0},
+{id:'fletan',cat:'Poissons',name:'Flétan',kcal:110,prot:21,carbs:0,fat:2.5,fiber:0},
+{id:'panga',cat:'Poissons',name:'Panga',kcal:90,prot:15,carbs:0,fat:3,fiber:0},
+{id:'tilapia',cat:'Poissons',name:'Tilapia',kcal:96,prot:20,carbs:0,fat:1.7,fiber:0},
+{id:'oeufs_saumon',cat:'Poissons',name:'Œufs de saumon',kcal:264,prot:29,carbs:3.4,fat:15,fiber:0},
+{id:'poulpe',cat:'Poissons',name:'Poulpe',kcal:82,prot:15,carbs:2.2,fat:1,fiber:0},
+{id:'huitres',cat:'Poissons',name:'Huîtres',kcal:65,prot:9,carbs:4,fat:2.3,fiber:0},
+{id:'langoustine',cat:'Poissons',name:'Langoustine',kcal:89,prot:20,carbs:0.5,fat:0.8,fiber:0},
+{id:'homard',cat:'Poissons',name:'Homard',kcal:89,prot:19,carbs:0.5,fat:0.9,fiber:0},
+{id:'bulots',cat:'Poissons',name:'Bulots',kcal:96,prot:20,carbs:2.5,fat:0.6,fiber:0},
+{id:'brandade',cat:'Poissons',name:'Brandade de morue',kcal:160,prot:9,carbs:6,fat:11,fiber:0.5},
+// ===== SUPERALIMENTS / GRAINES =====
+{id:'pollen',cat:'Superaliments',name:'Pollen de fleurs',kcal:341,prot:23,carbs:38,fat:5,fiber:9},
+{id:'spiruline',cat:'Superaliments',name:'Spiruline (poudre)',kcal:290,prot:57,carbs:24,fat:8,fiber:3.6},
+{id:'gelee_royale',cat:'Superaliments',name:'Gelée royale',kcal:139,prot:12,carbs:15,fat:4,fiber:0},
+{id:'levure_biere',cat:'Superaliments',name:'Levure de bière',kcal:325,prot:45,carbs:38,fat:4,fiber:22},
+{id:'levure_maltee',cat:'Superaliments',name:'Levure maltée (nutritionnelle)',kcal:305,prot:45,carbs:36,fat:4,fiber:20},
+{id:'graines_tournesol',cat:'Superaliments',name:'Graines de tournesol',kcal:584,prot:21,carbs:20,fat:51,fiber:8.6},
+{id:'graines_courge',cat:'Superaliments',name:'Graines de courge',kcal:559,prot:30,carbs:11,fat:49,fiber:6},
+{id:'graines_sesame',cat:'Superaliments',name:'Graines de sésame',kcal:573,prot:18,carbs:23,fat:50,fiber:12},
+{id:'tahin',cat:'Superaliments',name:'Tahin (purée de sésame)',kcal:595,prot:17,carbs:21,fat:54,fiber:9},
+{id:'noixbresil',cat:'Superaliments',name:'Noix du Brésil',kcal:656,prot:14,carbs:12,fat:66,fiber:7.5},
+{id:'macadamia',cat:'Superaliments',name:'Noix de macadamia',kcal:718,prot:8,carbs:14,fat:76,fiber:8.6},
+{id:'goji',cat:'Superaliments',name:'Baies de goji séchées',kcal:349,prot:14,carbs:77,fat:0.4,fiber:13},
+{id:'cacaopoudre',cat:'Superaliments',name:'Cacao en poudre non sucré',kcal:228,prot:20,carbs:58,fat:14,fiber:33},
+{id:'graines_lin_moulues',cat:'Superaliments',name:'Graines de lin moulues',kcal:534,prot:18,carbs:29,fat:42,fiber:27},
+{id:'psyllium',cat:'Superaliments',name:'Psyllium (fibres en poudre)',kcal:210,prot:2,carbs:20,fat:1,fiber:75},
+{id:'maca',cat:'Superaliments',name:'Maca en poudre',kcal:325,prot:14,carbs:71,fat:2.2,fiber:8.5},
+// ===== PETIT-DÉJEUNER =====
+{id:'pancake',cat:'Petit-déjeuner',name:'Pancake nature',kcal:227,prot:6,carbs:28,fat:10,fiber:1},
+{id:'gaufre',cat:'Petit-déjeuner',name:'Gaufre nature',kcal:291,prot:6,carbs:35,fat:14,fiber:1.5},
+{id:'painperdu',cat:'Petit-déjeuner',name:'Pain perdu',kcal:230,prot:7,carbs:28,fat:9,fiber:1.2},
+{id:'porridge',cat:'Petit-déjeuner',name:'Porridge (avoine + lait, prêt)',kcal:75,prot:3,carbs:11,fat:2,fiber:1.4},
+{id:'granola',cat:'Petit-déjeuner',name:'Granola',kcal:471,prot:10,carbs:60,fat:20,fiber:7},
+{id:'cerealessoufflees',cat:'Petit-déjeuner',name:'Céréales soufflées chocolatées',kcal:390,prot:6,carbs:80,fat:4,fiber:3},
+{id:'briocheu',cat:'Petit-déjeuner',name:'Brioche',kcal:320,prot:8,carbs:50,fat:9,fiber:2},
+{id:'biscotte',cat:'Petit-déjeuner',name:'Biscotte',kcal:408,prot:10,carbs:75,fat:7,fiber:4},
+{id:'compote',cat:'Petit-déjeuner',name:'Compote de pomme (sans sucre ajouté)',kcal:55,prot:0.2,carbs:13,fat:0.1,fiber:1.5},
+{id:'oeufsbrouilles',cat:'Petit-déjeuner',name:'Œufs brouillés',kcal:168,prot:12,carbs:1.5,fat:13,fiber:0},
+{id:'bacon_oeuf',cat:'Petit-déjeuner',name:'Œuf au plat + bacon (portion)',kcal:220,prot:15,carbs:1,fat:17,fiber:0},
+// ===== PLATS DU MONDE (suite) =====
+{id:'padthai',cat:'Plats',name:'Pad thaï au poulet',kcal:180,prot:9,carbs:22,fat:6,fiber:1.5},
+{id:'curry_poulet',cat:'Plats',name:'Curry de poulet',kcal:150,prot:10,carbs:14,fat:6,fiber:1.5},
+{id:'couscous_royal',cat:'Plats',name:'Couscous royal',kcal:170,prot:9,carbs:18,fat:7,fiber:2.5},
+{id:'paella',cat:'Plats',name:'Paella',kcal:160,prot:9,carbs:20,fat:5,fiber:1},
+{id:'chiliconcarne',cat:'Plats',name:'Chili con carne',kcal:130,prot:9,carbs:11,fat:5,fiber:3.5},
+{id:'tacosboeuf',cat:'Plats',name:'Tacos (bœuf)',kcal:210,prot:10,carbs:20,fat:10,fiber:2},
+{id:'ramen',cat:'Plats',name:'Ramen (bouillon, nouilles, œuf)',kcal:130,prot:6,carbs:18,fat:4,fiber:1},
+{id:'pokebowl',cat:'Plats',name:'Poke bowl saumon',kcal:150,prot:9,carbs:17,fat:5,fiber:1.5},
+{id:'lasagnes',cat:'Plats',name:'Lasagnes bolognaise',kcal:145,prot:8,carbs:13,fat:7,fiber:1},
+{id:'gratindauphinois',cat:'Plats',name:'Gratin dauphinois',kcal:155,prot:3.5,carbs:14,fat:10,fiber:1.3},
+{id:'wok_legumes',cat:'Plats',name:'Wok de légumes nature',kcal:60,prot:2,carbs:8,fat:2,fiber:2.5},
+{id:'falafel',cat:'Plats',name:'Falafel',kcal:333,prot:13,carbs:32,fat:18,fiber:5},
+{id:'shawarma',cat:'Plats',name:'Shawarma poulet',kcal:220,prot:15,carbs:18,fat:10,fiber:1.5},
+{id:'risotto',cat:'Plats',name:'Risotto',kcal:170,prot:4,carbs:26,fat:5,fiber:1},
+{id:'gyoza',cat:'Plats',name:'Gyoza / raviolis vapeur',kcal:200,prot:8,carbs:22,fat:9,fiber:1},
+{id:'moussaka',cat:'Plats',name:'Moussaka',kcal:145,prot:7,carbs:9,fat:9,fiber:1.8},
+{id:'chowmein',cat:'Plats',name:'Nouilles sautées (chow mein)',kcal:145,prot:6,carbs:20,fat:5,fiber:1.5},
+{id:'burritobowl',cat:'Plats',name:'Burrito bowl (poulet, riz, haricots)',kcal:160,prot:10,carbs:18,fat:5,fiber:3},
+// ===== FROMAGES (suite) =====
+{id:'boursin',cat:'Œufs & Laitier',name:'Fromage à tartiner type Boursin',kcal:365,prot:7,carbs:2.5,fat:37,fiber:0},
+{id:'philadelphia',cat:'Œufs & Laitier',name:'Fromage à tartiner nature',kcal:242,prot:5.5,carbs:4,fat:23,fiber:0},
+{id:'parmesan',cat:'Œufs & Laitier',name:'Parmesan',kcal:392,prot:36,carbs:3.2,fat:26,fiber:0},
+{id:'roquefort',cat:'Œufs & Laitier',name:'Roquefort',kcal:369,prot:20,carbs:2,fat:31,fiber:0},
+{id:'raclette',cat:'Œufs & Laitier',name:'Raclette (fromage)',kcal:370,prot:24,carbs:0.5,fat:30,fiber:0},
+{id:'reblochon',cat:'Œufs & Laitier',name:'Reblochon',kcal:315,prot:21,carbs:0.5,fat:26,fiber:0},
+{id:'bleu',cat:'Œufs & Laitier',name:'Fromage bleu (type bleu d\'Auvergne)',kcal:353,prot:19,carbs:2,fat:30,fiber:0},
+{id:'babybel',cat:'Œufs & Laitier',name:'Fromage type Babybel',kcal:306,prot:24,carbs:0.5,fat:23,fiber:0},
+{id:'kiri',cat:'Œufs & Laitier',name:'Fromage fondu type Kiri',kcal:262,prot:8,carbs:3,fat:24,fiber:0},
+// ===== VIANDES (suite) =====
+{id:'jambondinde',cat:'Viandes',name:'Jambon de dinde',kcal:100,prot:18,carbs:1.5,fat:2.5,fiber:0},
+{id:'boudinnoir',cat:'Viandes',name:'Boudin noir',kcal:379,prot:15,carbs:2,fat:34,fiber:0},
+{id:'andouillette',cat:'Viandes',name:'Andouillette',kcal:290,prot:14,carbs:1,fat:25,fiber:0},
+{id:'veauescalope',cat:'Viandes',name:'Escalope de veau',kcal:120,prot:22,carbs:0,fat:3,fiber:0},
+{id:'pintade',cat:'Viandes',name:'Pintade',kcal:158,prot:23,carbs:0,fat:7,fiber:0},
+{id:'saucissesstrasbourg',cat:'Viandes',name:'Saucisses de Strasbourg',kcal:280,prot:12,carbs:2,fat:25,fiber:0},
+{id:'pouletroti',cat:'Viandes',name:'Poulet rôti (avec peau)',kcal:215,prot:27,carbs:0,fat:12,fiber:0},
+{id:'terrine',cat:'Viandes',name:'Terrine / pâté de campagne',kcal:320,prot:14,carbs:1,fat:29,fiber:0},
+// ===== LÉGUMES (suite) =====
+{id:'artichaut',cat:'Légumes',name:'Artichaut cuit',kcal:47,prot:3.3,carbs:8,fat:0.2,fiber:5.4},
+{id:'poireau',cat:'Légumes',name:'Poireau cuit',kcal:29,prot:1.2,carbs:5,fat:0.3,fiber:2.5},
+{id:'celeri',cat:'Légumes',name:'Céleri',kcal:16,prot:0.7,carbs:3,fat:0.2,fiber:1.6},
+{id:'betterave',cat:'Légumes',name:'Betterave cuite',kcal:44,prot:1.7,carbs:10,fat:0.2,fiber:2},
+{id:'radis',cat:'Légumes',name:'Radis',kcal:16,prot:0.7,carbs:3.4,fat:0.1,fiber:1.6},
+{id:'fenouil',cat:'Légumes',name:'Fenouil',kcal:31,prot:1.2,carbs:7,fat:0.2,fiber:3.1},
+{id:'chourouge',cat:'Légumes',name:'Chou rouge',kcal:31,prot:1.4,carbs:7,fat:0.2,fiber:2.1},
+{id:'chouvert',cat:'Légumes',name:'Chou vert cuit',kcal:23,prot:1.3,carbs:4,fat:0.2,fiber:2.5},
+{id:'choubruxelles',cat:'Légumes',name:'Choux de Bruxelles cuits',kcal:43,prot:3.4,carbs:6,fat:0.3,fiber:3.8},
+{id:'endive',cat:'Légumes',name:'Endive',kcal:17,prot:0.9,carbs:3,fat:0.1,fiber:3.1},
+{id:'asperge',cat:'Légumes',name:'Asperge cuite',kcal:22,prot:2.4,carbs:3.4,fat:0.2,fiber:2},
+{id:'panais',cat:'Légumes',name:'Panais cuit',kcal:71,prot:1.2,carbs:16,fat:0.3,fiber:4.6},
+{id:'navet',cat:'Légumes',name:'Navet cuit',kcal:22,prot:0.8,carbs:4,fat:0.1,fiber:1.8},
+{id:'salsifis',cat:'Légumes',name:'Salsifis cuits',kcal:82,prot:3.3,carbs:18,fat:0.2,fiber:3.3},
+{id:'roquette',cat:'Légumes',name:'Roquette',kcal:25,prot:2.6,carbs:2.1,fat:0.7,fiber:1.6},
+{id:'mache',cat:'Légumes',name:'Mâche',kcal:21,prot:2,carbs:1.6,fat:0.4,fiber:1.6},
+// ===== FRUITS (suite) =====
+{id:'grenade',cat:'Fruits',name:'Grenade',kcal:83,prot:1.7,carbs:19,fat:1.2,fiber:4},
+{id:'litchi',cat:'Fruits',name:'Litchi',kcal:66,prot:0.8,carbs:17,fat:0.4,fiber:1.3},
+{id:'papaye',cat:'Fruits',name:'Papaye',kcal:43,prot:0.5,carbs:11,fat:0.3,fiber:1.7},
+{id:'fruitpassion',cat:'Fruits',name:'Fruit de la passion',kcal:97,prot:2.2,carbs:23,fat:0.7,fiber:10.4},
+{id:'cerises',cat:'Fruits',name:'Cerises',kcal:63,prot:1.1,carbs:16,fat:0.2,fiber:2.1},
+{id:'mirabelles',cat:'Fruits',name:'Mirabelles',kcal:57,prot:0.6,carbs:14,fat:0.1,fiber:1.5},
+{id:'prune',cat:'Fruits',name:'Prune',kcal:46,prot:0.7,carbs:11,fat:0.3,fiber:1.4},
+{id:'clementine',cat:'Fruits',name:'Clémentine',kcal:47,prot:0.8,carbs:11,fat:0.2,fiber:1.7},
+{id:'pamplemousse',cat:'Fruits',name:'Pamplemousse',kcal:42,prot:0.8,carbs:11,fat:0.1,fiber:1.6},
+{id:'cocochair',cat:'Fruits',name:'Noix de coco (chair fraîche)',kcal:354,prot:3.3,carbs:15,fat:33,fiber:9},
+{id:'nectarine',cat:'Fruits',name:'Nectarine',kcal:44,prot:1.1,carbs:10,fat:0.3,fiber:1.7},
+{id:'physalis',cat:'Fruits',name:'Physalis',kcal:53,prot:1.9,carbs:11,fat:0.7,fiber:4.9},
+// ===== BOISSONS (suite) =====
+{id:'laitcoco_boisson',cat:'Boissons',name:'Lait de coco (boisson)',kcal:19,prot:0.2,carbs:2.9,fat:1.7,fiber:0},
+{id:'laitriz',cat:'Boissons',name:'Lait de riz',kcal:47,prot:0.3,carbs:9.4,fat:1,fiber:0.1},
+{id:'jusananas',cat:'Boissons',name:'Jus d\'ananas',kcal:53,prot:0.4,carbs:13,fat:0.1,fiber:0.3},
+{id:'justomate',cat:'Boissons',name:'Jus de tomate',kcal:17,prot:0.8,carbs:3.5,fat:0.1,fiber:0.5},
+{id:'limonade',cat:'Boissons',name:'Limonade',kcal:34,prot:0,carbs:8.5,fat:0,fiber:0},
+{id:'tonic',cat:'Boissons',name:'Tonic / Schweppes',kcal:33,prot:0,carbs:8.3,fat:0,fiber:0},
+{id:'tonic_zero',cat:'Boissons',name:'Tonic / Schweppes Zéro',kcal:0.5,prot:0,carbs:0.1,fat:0,fiber:0},
+{id:'eaugazaromatisee',cat:'Boissons',name:'Eau gazeuse aromatisée (sans sucre)',kcal:2,prot:0,carbs:0.4,fat:0,fiber:0},
+{id:'oasis',cat:'Boissons',name:'Boisson aux fruits type Oasis',kcal:45,prot:0,carbs:11,fat:0,fiber:0},
+{id:'caprisun',cat:'Boissons',name:'Boisson en gourde type Capri-Sun',kcal:41,prot:0,carbs:10,fat:0,fiber:0},
+{id:'thegalce',cat:'Boissons',name:'Thé glacé maison (peu sucré)',kcal:18,prot:0,carbs:4.4,fat:0,fiber:0},
+{id:'cocktail',cat:'Boissons',name:'Cocktail sucré (moyenne, mojito...)',kcal:120,prot:0,carbs:12,fat:0,fiber:0},
+{id:'cidre',cat:'Boissons',name:'Cidre',kcal:40,prot:0,carbs:4.5,fat:0,fiber:0},
+{id:'shakepret',cat:'Boissons',name:'Shake protéiné prêt-à-boire',kcal:75,prot:12,carbs:4,fat:1.5,fiber:0.5},
+{id:'chocolat_lait_boisson',cat:'Boissons',name:'Boisson chocolatée allégée',kcal:52,prot:3.3,carbs:7,fat:1.2,fiber:0.4},
+// ===== SUCRERIES (suite) =====
+{id:'pateamande',cat:'Sucreries',name:'Pâte d\'amande',kcal:457,prot:8,carbs:53,fat:24,fiber:4},
+{id:'nougat',cat:'Sucreries',name:'Nougat',kcal:400,prot:6,carbs:70,fat:11,fiber:2},
+{id:'marshmallow',cat:'Sucreries',name:'Marshmallow',kcal:318,prot:1.8,carbs:81,fat:0.2,fiber:0},
+{id:'speculoos',cat:'Sucreries',name:'Spéculoos',kcal:471,prot:6,carbs:75,fat:16,fiber:2},
+{id:'madeleine',cat:'Sucreries',name:'Madeleine',kcal:430,prot:6,carbs:52,fat:22,fiber:1},
+{id:'financier',cat:'Sucreries',name:'Financier',kcal:450,prot:7,carbs:45,fat:27,fiber:1.5},
+{id:'tartepomme',cat:'Sucreries',name:'Tarte aux pommes (part)',kcal:230,prot:3,carbs:32,fat:10,fiber:1.5},
+{id:'macaron',cat:'Sucreries',name:'Macaron',kcal:400,prot:6,carbs:56,fat:17,fiber:2},
+{id:'churros',cat:'Sucreries',name:'Churros',kcal:380,prot:5,carbs:48,fat:19,fiber:1.5},
+{id:'sorbet',cat:'Sucreries',name:'Sorbet aux fruits',kcal:130,prot:0.5,carbs:32,fat:0.1,fiber:1},
+{id:'kinderbueno',cat:'Sucreries',name:'Barre chocolatée fourrée (type Kinder Bueno)',kcal:560,prot:8,carbs:50,fat:37,fiber:2},
+{id:'paindepices',cat:'Sucreries',name:'Pain d\'épices',kcal:357,prot:5,carbs:70,fat:5,fiber:2},
+// ===== FÉCULENTS (suite) =====
+{id:'soba',cat:'Féculents',name:'Nouilles soba cuites',kcal:99,prot:5,carbs:21,fat:0.1,fiber:1.5},
+{id:'udon',cat:'Féculents',name:'Nouilles udon cuites',kcal:127,prot:3.6,carbs:27,fat:0.4,fiber:1},
+{id:'polenta',cat:'Féculents',name:'Polenta cuite',kcal:85,prot:2,carbs:18,fat:0.5,fiber:0.9},
+{id:'sarrasin',cat:'Féculents',name:'Sarrasin cuit',kcal:92,prot:3.4,carbs:20,fat:0.6,fiber:2.7},
+{id:'epeautre',cat:'Féculents',name:'Épeautre cuit',kcal:127,prot:5.5,carbs:26,fat:1,fiber:4.4},
+{id:'rizgluant',cat:'Féculents',name:'Riz gluant cuit',kcal:169,prot:3.5,carbs:37,fat:0.3,fiber:0.4},
+{id:'blepetitepeautre',cat:'Féculents',name:'Petit épeautre cuit',kcal:120,prot:5,carbs:24,fat:1,fiber:5},
+{id:'crackers',cat:'Féculents',name:'Crackers / biscuits salés',kcal:480,prot:9,carbs:64,fat:20,fiber:2.5},
+{id:'galettesriz',cat:'Féculents',name:'Galettes de riz soufflé',kcal:387,prot:8,carbs:82,fat:2.8,fiber:2},
+];
+
+let customFoods = [];
+let meals = [];
+let builderItems = [];
+let editingMealId = null;
+let currentDay = todayStr();
+let historyPeriod = 'week';
+let periodOffset = 0;
+
+/* ============ STORAGE ============ */
+async function loadAll(){
+  try{
+    const m = await window.storage.get('meal-log', false);
+    meals = m ? JSON.parse(m.value) : [];
+  }catch(e){ meals = []; }
+  try{
+    const c = await window.storage.get('custom-foods', false);
+    customFoods = c ? JSON.parse(c.value) : [];
+  }catch(e){ customFoods = []; }
+  renderCustomFoodList();
+  renderBuilder();
+  renderDay();
+  renderHistory();
+}
+async function saveMeals(){
+  try{ await window.storage.set('meal-log', JSON.stringify(meals), false); }
+  catch(e){ showToast('Erreur de sauvegarde'); }
+}
+async function saveCustomFoods(){
+  try{ await window.storage.set('custom-foods', JSON.stringify(customFoods), false); }
+  catch(e){ showToast('Erreur de sauvegarde'); }
+}
+
+/* ============ HELPERS ============ */
+function todayStr(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function fmt(n){ return Math.round(n*10)/10; }
+function allFoods(){ return FOOD_DB.concat(customFoods); }
+function findFood(id){ return allFoods().find(f=>f.id===id); }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function scaleFood(food, grams){
+  const r = grams/100;
+  return {
+    kcal: food.kcal*r, prot: food.prot*r, carbs: food.carbs*r, fat: food.fat*r, fiber: food.fiber*r
+  };
+}
+function sumTotals(items){
+  return items.reduce((acc,it)=>{
+    acc.kcal+=it.kcal; acc.prot+=it.prot; acc.carbs+=it.carbs; acc.fat+=it.fat; acc.fiber+=it.fiber;
+    return acc;
+  },{kcal:0,prot:0,carbs:0,fat:0,fiber:0});
+}
+function dateAdd(dateStr, days){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()+days);
+  return d.toISOString().slice(0,10);
+}
+function weekStart(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const day = (d.getDay()+6)%7; // Monday=0
+  d.setDate(d.getDate()-day);
+  return d.toISOString().slice(0,10);
+}
+function monthLabel(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  return d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+}
+function dayLabelFull(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+function scoreFor(totals){
+  if(!totals) return null;
+  const keys=['kcal','prot','carbs','fat'];
+  let devSum=0;
+  keys.forEach(k=>{ devSum += Math.abs(totals[k]-TARGET[k])/TARGET[k]; });
+  const avgDev = devSum/keys.length;
+  return Math.max(0, Math.round(100*(1-avgDev)));
+}
+function barColor(pct){
+  if(pct>=90 && pct<=110) return 'var(--good)';
+  if(pct>130) return 'var(--bad)';
+  if(pct<60) return 'var(--warn)';
+  return 'var(--red)';
+}
+
+/* ============ SEARCHABLE FOOD COMBO ============ */
+let selectedFoodId = null;
+function normalize(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+const searchInput = document.getElementById('foodSearch');
+const suggBox = document.getElementById('foodSuggestions');
+const clearBtn = document.getElementById('clearSearch');
+const selTag = document.getElementById('selTag');
+const selTagText = document.getElementById('selTagText');
+
+function renderSuggestions(){
+  const q = normalize(searchInput.value.trim());
+  suggBox.innerHTML='';
+  let results;
+  if(!q){
+    // group by category, show a compact browse list
+    const cats = {};
+    allFoods().forEach(f=>{ const c=f.cat||'Mes aliments'; (cats[c]=cats[c]||[]).push(f); });
+    Object.keys(cats).forEach(c=>{
+      const g=document.createElement('div'); g.className='grp'; g.textContent=c;
+      suggBox.appendChild(g);
+      cats[c].slice(0,6).forEach(f=>suggBox.appendChild(makeOpt(f)));
+    });
+    suggBox.show = true;
+  } else {
+    results = allFoods()
+      .map(f=>({f, score: normalize(f.name).startsWith(q) ? 0 : (normalize(f.name).includes(q) ? 1 : -1)}))
+      .filter(r=>r.score>=0)
+      .sort((a,b)=>a.score-b.score || a.f.name.localeCompare(b.f.name))
+      .slice(0,40);
+    if(!results.length){
+      const none = document.createElement('div'); none.className='none';
+      none.textContent = 'Aucun résultat — ajoute-le en aliment personnalisé ci-dessous';
+      suggBox.appendChild(none);
+    } else {
+      results.forEach(r=>suggBox.appendChild(makeOpt(r.f)));
+    }
+  }
+  suggBox.classList.add('show');
+}
+function makeOpt(f){
+  const d = document.createElement('div'); d.className='opt';
+  d.innerHTML = `<span>${f.name}</span><span class="macs">${f.kcal}kcal · P${f.prot} G${f.carbs} L${f.fat}</span>`;
+  d.addEventListener('click', ()=>selectFood(f));
+  return d;
+}
+function selectFood(f){
+  selectedFoodId = f.id;
+  searchInput.value = f.name;
+  suggBox.classList.remove('show');
+  selTag.classList.add('show');
+  selTagText.textContent = `Sélectionné : ${f.name} (${f.kcal} kcal / ${f.prot}g P / ${f.carbs}g G / ${f.fat}g L /100g-ml)`;
+  document.getElementById('foodGrams').focus();
+}
+function clearSelection(){
+  selectedFoodId = null;
+  searchInput.value='';
+  selTag.classList.remove('show');
+  clearBtn.classList.remove('show');
+}
+searchInput.addEventListener('input', ()=>{
+  if(selectedFoodId){ selectedFoodId=null; selTag.classList.remove('show'); }
+  clearBtn.classList.toggle('show', !!searchInput.value);
+  renderSuggestions();
+});
+searchInput.addEventListener('focus', renderSuggestions);
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.combo')) suggBox.classList.remove('show');
+});
+clearBtn.addEventListener('click', clearSelection);
+document.getElementById('selTagClear').addEventListener('click', clearSelection);
+
+/* ============ BUILDER ============ */
+function renderBuilder(){
+  const list = document.getElementById('ingList');
+  const empty = document.getElementById('ingEmpty');
+  const count = document.getElementById('ingCount');
+  list.innerHTML='';
+  count.textContent = builderItems.length ? `(${builderItems.length})` : '';
+  empty.style.display = builderItems.length ? 'none' : 'block';
+  builderItems.forEach((it,idx)=>{
+    const li=document.createElement('li');
+    li.innerHTML = `<div><div class="nm">${it.name} — ${it.grams}g</div>
+      <div class="mac">${fmt(it.kcal)} kcal · P ${fmt(it.prot)}g · G ${fmt(it.carbs)}g · L ${fmt(it.fat)}g · F ${fmt(it.fiber)}g</div></div>
+      <button data-idx="${idx}" class="rmBtn">✕</button>`;
+    list.appendChild(li);
+  });
+  list.querySelectorAll('.rmBtn').forEach(b=>{
+    b.addEventListener('click',()=>{ builderItems.splice(+b.dataset.idx,1); renderBuilder(); });
+  });
+  const t = sumTotals(builderItems);
+  document.getElementById('bKcal').textContent = Math.round(t.kcal);
+  document.getElementById('bProt').textContent = fmt(t.prot)+'g';
+  document.getElementById('bCarbs').textContent = fmt(t.carbs)+'g';
+  document.getElementById('bFat').textContent = fmt(t.fat)+'g';
+  document.getElementById('bFiber').textContent = fmt(t.fiber)+'g';
+  renderProgress();
+}
+
+/* ============ LIVE DAY PROGRESS (builder tab) ============ */
+function renderProgress(){
+  const date = document.getElementById('mealDate').value || todayStr();
+  const isToday = date === todayStr();
+  document.getElementById('progressDateLabel').textContent =
+    `— ${isToday ? "aujourd'hui" : dayLabelFull(date)}`;
+
+  const logged = sumTotals(mealsForDay(date).map(m=>m.totals));
+  const pending = sumTotals(builderItems);
+  const combined = sumTotals([logged, pending]);
+
+  const bars = document.getElementById('progressBars');
+  bars.innerHTML='';
+  [['kcal','Kcal',TARGET.kcal,''],['prot','Protéines',TARGET.prot,'g'],['carbs','Glucides',TARGET.carbs,'g'],['fat','Lipides',TARGET.fat,'g'],['fiber','Fibres',TARGET.fiber,'g']]
+    .forEach(([k,label,target,unit])=>{
+      const val = combined[k]||0;
+      const remaining = target - val;
+      const pct = Math.min(100,(val/target)*100);
+      const loggedPct = target>0 ? Math.min(100,(logged[k]/target)*100) : 0;
+      const row = document.createElement('div'); row.className='bar-row';
+      const remTxt = remaining>=0
+        ? `reste ${fmt(remaining)}${unit}`
+        : `dépassé de ${fmt(Math.abs(remaining))}${unit}`;
+      row.innerHTML = `<div class="bhead"><span class="lab">${label}</span><span class="val">${fmt(val)}${unit} / ${target}${unit} · ${remTxt}</span></div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pct}%;background-color:${barColor((val/target)*100)}"></div>
+          <div class="bar-fill" style="width:${loggedPct}%;background-color:var(--blue-dim);opacity:.9"></div>
+        </div>`;
+      bars.appendChild(row);
+    });
+
+  const note = document.getElementById('progressNote');
+  if(pending.kcal>0){
+    note.textContent = `Barre foncée = déjà enregistré aujourd'hui · barre pleine = + le plat en cours de construction (${Math.round(pending.kcal)} kcal non encore enregistrés).`;
+  } else if(mealsForDay(date).length){
+    note.textContent = `${mealsForDay(date).length} repas déjà enregistré(s) ${isToday ? "aujourd'hui" : 'ce jour-là'}.`;
+  } else {
+    note.textContent = `Aucun repas enregistré ${isToday ? "aujourd'hui" : 'ce jour-là'} pour l'instant — commence à composer un plat ci-dessous.`;
+  }
+}
+
+document.getElementById('addIngBtn').addEventListener('click',()=>{
+  const gramsInput = document.getElementById('foodGrams');
+  const grams = parseFloat(gramsInput.value);
+  if(!selectedFoodId){ showToast('Sélectionne un aliment dans la liste'); return; }
+  if(!grams || grams<=0){ showToast('Entre un grammage valide'); return; }
+  const food = findFood(selectedFoodId);
+  const scaled = scaleFood(food, grams);
+  builderItems.push({ name: food.name, grams, ...scaled });
+  gramsInput.value='';
+  clearSelection();
+  renderBuilder();
+});
+
+function renderCustomFoodList(){
+  const list = document.getElementById('customFoodList');
+  const empty = document.getElementById('customFoodEmpty');
+  const count = document.getElementById('customCount');
+  list.innerHTML='';
+  count.textContent = customFoods.length ? `(${customFoods.length})` : '';
+  empty.style.display = customFoods.length ? 'none' : 'block';
+  customFoods.slice().reverse().forEach(f=>{
+    const li=document.createElement('li');
+    li.innerHTML = `<div><div class="nm">${f.name}</div>
+      <div class="mac">${f.kcal}kcal · P${f.prot}g · G${f.carbs}g · L${f.fat}g · F${f.fiber}g /100g-ml</div></div>
+      <button data-id="${f.id}" class="rmCfBtn">✕</button>`;
+    list.appendChild(li);
+  });
+  list.querySelectorAll('.rmCfBtn').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      customFoods = customFoods.filter(f=>f.id!==b.dataset.id);
+      await saveCustomFoods();
+      renderCustomFoodList();
+      showToast('Aliment supprimé');
+    });
+  });
+}
+document.getElementById('saveCustomFood').addEventListener('click', async ()=>{
+  const name = document.getElementById('cfName').value.trim();
+  const kcal = parseFloat(document.getElementById('cfKcal').value)||0;
+  const prot = parseFloat(document.getElementById('cfProt').value)||0;
+  const carbs = parseFloat(document.getElementById('cfCarbs').value)||0;
+  const fat = parseFloat(document.getElementById('cfFat').value)||0;
+  const fiber = parseFloat(document.getElementById('cfFiber').value)||0;
+  if(!name){ showToast('Donne un nom à ton aliment'); return; }
+  const id = 'custom-'+Date.now();
+  const food = {id,name,cat:'Mes aliments',kcal,prot,carbs,fat,fiber};
+  customFoods.push(food);
+  await saveCustomFoods();
+  renderCustomFoodList();
+  ['cfName','cfKcal','cfProt','cfCarbs','cfFat','cfFiber'].forEach(i=>document.getElementById(i).value='');
+  showToast('Aliment ajouté à ta base ✓');
+});
+
+document.getElementById('mealDate').value = todayStr();
+document.getElementById('mealDate').addEventListener('change', renderProgress);
+// pré-sélectionne le type de repas selon l'heure actuelle
+(function(){
+  const h = new Date().getHours();
+  const guess = h<11 ? 'petit-dejeuner' : h<15 ? 'dejeuner' : h<22 ? 'diner' : 'collation';
+  document.getElementById('mealType').value = guess;
+})();
+document.getElementById('saveMealBtn').addEventListener('click', async ()=>{
+  if(!builderItems.length){ showToast('Ajoute au moins un ingrédient'); return; }
+  const name = document.getElementById('mealName').value.trim() || 'Plat sans nom';
+  const date = document.getElementById('mealDate').value || todayStr();
+  const mealType = document.getElementById('mealType').value;
+  const totals = sumTotals(builderItems);
+  if(editingMealId){
+    const idx = meals.findIndex(m=>m.id===editingMealId);
+    if(idx>-1){
+      meals[idx] = { ...meals[idx], date, name, mealType, items: builderItems.slice(), totals };
+    }
+    editingMealId = null;
+    document.getElementById('editBanner').style.display='none';
+    document.getElementById('saveMealBtn').textContent = '✓ Enregistrer dans le journal';
+    showToast('Plat mis à jour ✓');
+  } else {
+    meals.push({
+      id: 'meal-'+Date.now(),
+      date, name, mealType,
+      time: new Date().toISOString(),
+      items: builderItems.slice(),
+      totals
+    });
+    showToast('Plat enregistré ✓');
+  }
+  await saveMeals();
+  builderItems = [];
+  document.getElementById('mealName').value='';
+  renderBuilder();
+  currentDay = date;
+  renderDay();
+});
+
+const MEAL_TYPE_LABEL = {
+  'petit-dejeuner': '🌅 Petit-déj', 'dejeuner': '☀️ Déjeuner', 'diner': '🌙 Dîner', 'collation': '🍎 Collation'
+};
+
+function startEditMeal(id){
+  const meal = meals.find(m=>m.id===id);
+  if(!meal) return;
+  editingMealId = id;
+  builderItems = meal.items.map(it=>({...it}));
+  document.getElementById('mealName').value = meal.name;
+  document.getElementById('mealDate').value = meal.date;
+  document.getElementById('mealType').value = meal.mealType || 'collation';
+  document.getElementById('editBanner').style.display='flex';
+  document.getElementById('saveMealBtn').textContent = '✓ Mettre à jour ce plat';
+  renderBuilder();
+  document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelector('nav.tabs button[data-view="builder"]').classList.add('active');
+  document.getElementById('view-builder').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('cancelEditBtn').addEventListener('click', ()=>{
+  editingMealId = null;
+  builderItems = [];
+  document.getElementById('mealName').value='';
+  document.getElementById('editBanner').style.display='none';
+  document.getElementById('saveMealBtn').textContent = '✓ Enregistrer dans le journal';
+  renderBuilder();
+});
+
+/* ============ DAY VIEW ============ */
+function mealsForDay(dateStr){ return meals.filter(m=>m.date===dateStr); }
+
+function renderDay(){
+  document.getElementById('dayLabel').textContent = dayLabelFull(currentDay);
+  const dayMeals = mealsForDay(currentDay);
+  const totals = sumTotals(dayMeals.map(m=>m.totals));
+  const sc = dayMeals.length ? scoreFor(totals) : null;
+  document.getElementById('dayScore').textContent = sc!==null ? `Score journée : ${sc}/100` : 'Pas encore de repas';
+
+  const bars = document.getElementById('dayBars');
+  bars.innerHTML='';
+  [['kcal','Kcal',TARGET.kcal,''],['prot','Protéines',TARGET.prot,'g'],['carbs','Glucides',TARGET.carbs,'g'],['fat','Lipides',TARGET.fat,'g'],['fiber','Fibres',TARGET.fiber,'g']]
+    .forEach(([k,label,target,unit])=>{
+      const val = totals[k]||0;
+      const pct = Math.min(160,(val/target)*100);
+      const row = document.createElement('div'); row.className='bar-row';
+      row.innerHTML = `<div class="bhead"><span class="lab">${label}</span><span class="val">${fmt(val)}${unit} / ${target}${unit}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,pct)}%;background-color:${barColor((val/target)*100)}"></div></div>`;
+      bars.appendChild(row);
+    });
+
+  const listEl = document.getElementById('dayMeals');
+  const emptyEl = document.getElementById('dayEmpty');
+  document.getElementById('dayMealCount').textContent = dayMeals.length ? `(${dayMeals.length})` : '';
+  listEl.innerHTML='';
+  emptyEl.style.display = dayMeals.length ? 'none' : 'block';
+  dayMeals.slice().sort((a,b)=>a.time.localeCompare(b.time)).forEach(m=>{
+    const div = document.createElement('div'); div.className='meal-item';
+    const t = new Date(m.time);
+    const typeLabel = MEAL_TYPE_LABEL[m.mealType] || '';
+    div.innerHTML = `<div class="mh"><span class="nm">${typeLabel ? `<span class="type-badge">${typeLabel}</span> ` : ''}${m.name}</span><span class="tm">${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}</span></div>
+      <div class="mm">${Math.round(m.totals.kcal)} kcal · P ${fmt(m.totals.prot)}g · G ${fmt(m.totals.carbs)}g · L ${fmt(m.totals.fat)}g · F ${fmt(m.totals.fiber)}g</div>
+      <div style="display:flex;gap:14px;margin-top:6px;">
+        <button class="edit" data-id="${m.id}">✎ Modifier</button>
+        <button class="del" data-id="${m.id}">✕ Supprimer</button>
+      </div>`;
+    listEl.appendChild(div);
+  });
+  listEl.querySelectorAll('.edit').forEach(b=>{
+    b.addEventListener('click', ()=> startEditMeal(b.dataset.id));
+  });
+  listEl.querySelectorAll('.del').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      meals = meals.filter(m=>m.id!==b.dataset.id);
+      await saveMeals();
+      renderDay(); renderHistory();
+    });
+  });
+}
+document.getElementById('prevDay').addEventListener('click',()=>{ currentDay=dateAdd(currentDay,-1); renderDay(); });
+document.getElementById('nextDay').addEventListener('click',()=>{ currentDay=dateAdd(currentDay,1); renderDay(); });
+
+/* ============ HISTORY ============ */
+function periodRange(){
+  if(historyPeriod==='week'){
+    const base = weekStart(dateAdd(todayStr(), periodOffset*7));
+    const days = Array.from({length:7},(_,i)=>dateAdd(base,i));
+    return { days, label: `Semaine du ${new Date(days[0]+'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} au ${new Date(days[6]+'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}` };
+  } else {
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()+periodOffset);
+    const y=d.getFullYear(), mo=d.getMonth();
+    const nDays = new Date(y,mo+1,0).getDate();
+    const days = Array.from({length:nDays},(_,i)=>{
+      const dd = new Date(y,mo,i+1); return dd.toISOString().slice(0,10);
+    });
+    return { days, label: monthLabel(days[0]).replace(/^./,c=>c.toUpperCase()) };
+  }
+}
+function allPeriods(kind){
+  // returns array of {label, start, days[]} covering all history, for "best" comparisons
+  const dates = [...new Set(meals.map(m=>m.date))].sort();
+  if(!dates.length) return [];
+  const groups = {};
+  dates.forEach(dt=>{
+    let key;
+    if(kind==='week'){ key = weekStart(dt); }
+    else { key = dt.slice(0,7); }
+    (groups[key] = groups[key]||[]).push(dt);
+  });
+  return Object.entries(groups).map(([key,days])=>({key,days}));
+}
+function avgTotalsForDays(days){
+  const withData = days.filter(d=>mealsForDay(d).length);
+  if(!withData.length) return null;
+  const sums = withData.map(d=>sumTotals(mealsForDay(d).map(m=>m.totals)));
+  const avg = sumTotals(sums);
+  ['kcal','prot','carbs','fat','fiber'].forEach(k=>avg[k]/=withData.length);
+  return avg;
+}
+
+function renderHistory(){
+  const {days,label} = periodRange();
+  document.getElementById('periodLabel').textContent = label;
+
+  // chart
+  const chart = document.getElementById('periodChart');
+  chart.innerHTML='';
+  days.forEach(d=>{
+    const t = sumTotals(mealsForDay(d).map(m=>m.totals));
+    const pct = Math.min(100,(t.kcal/TARGET.kcal)*100);
+    const col = document.createElement('div'); col.className='col';
+    const dObj = new Date(d+'T00:00:00');
+    const dl = historyPeriod==='week' ? dObj.toLocaleDateString('fr-FR',{weekday:'short'}).slice(0,3) : dObj.getDate();
+    col.innerHTML = `<div class="bar ${t.kcal>0?'filled':''}" style="height:${Math.max(2,pct)}%" title="${Math.round(t.kcal)} kcal"></div><div class="lb">${dl}</div>`;
+    chart.appendChild(col);
+  });
+
+  // period avg bars
+  const avg = avgTotalsForDays(days);
+  const barsEl = document.getElementById('periodBars');
+  barsEl.innerHTML='';
+  if(!avg){
+    barsEl.innerHTML = '<div class="empty">Aucun repas enregistré sur cette période.</div>';
+  } else {
+    [['kcal','Kcal',TARGET.kcal,''],['prot','Protéines',TARGET.prot,'g'],['carbs','Glucides',TARGET.carbs,'g'],['fat','Lipides',TARGET.fat,'g'],['fiber','Fibres',TARGET.fiber,'g']]
+      .forEach(([k,lb,target,unit])=>{
+        const val = avg[k];
+        const pct = Math.min(160,(val/target)*100);
+        const row=document.createElement('div'); row.className='bar-row';
+        row.innerHTML = `<div class="bhead"><span class="lab">${lb} (moy/j)</span><span class="val">${fmt(val)}${unit} / ${target}${unit}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,pct)}%;background-color:${barColor((val/target)*100)}"></div></div>`;
+        barsEl.appendChild(row);
+      });
+  }
+
+  // best day / week / month banner
+  const bestCard = document.getElementById('bestCard');
+  const bestDayEntries = [...new Set(meals.map(m=>m.date))]
+    .map(d=>({d, sc: scoreFor(sumTotals(mealsForDay(d).map(m=>m.totals)))}))
+    .filter(x=>x.sc!==null);
+  let html='';
+  if(bestDayEntries.length){
+    bestDayEntries.sort((a,b)=>b.sc-a.sc);
+    const bd = bestDayEntries[0];
+    html += `<div class="best-banner"><span class="ic">🏆</span><span>Meilleur jour : <b>${dayLabelFull(bd.d)}</b> — score ${bd.sc}/100</span></div>`;
+  }
+  const weekGroups = allPeriods('week').map(g=>({...g, avg: avgTotalsForDays(g.days)})).filter(g=>g.avg);
+  if(weekGroups.length){
+    weekGroups.forEach(g=>g.sc = scoreFor(g.avg));
+    weekGroups.sort((a,b)=>b.sc-a.sc);
+    const bw = weekGroups[0];
+    const wStart = new Date(bw.key+'T00:00:00');
+    html += `<div class="best-banner"><span class="ic">📅</span><span>Meilleure semaine : <b>semaine du ${wStart.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</b> — score ${bw.sc}/100</span></div>`;
+  }
+  const monthGroups = allPeriods('month').map(g=>({...g, avg: avgTotalsForDays(g.days)})).filter(g=>g.avg);
+  if(monthGroups.length){
+    monthGroups.forEach(g=>g.sc = scoreFor(g.avg));
+    monthGroups.sort((a,b)=>b.sc-a.sc);
+    const bm = monthGroups[0];
+    html += `<div class="best-banner"><span class="ic">🗓</span><span>Meilleur mois : <b>${monthLabel(bm.key+'-01').replace(/^./,c=>c.toUpperCase())}</b> — score ${bm.sc}/100</span></div>`;
+  }
+  if(html){ bestCard.innerHTML = '<h2>🏆 Classement</h2>'+html; bestCard.style.display='block'; }
+  else { bestCard.style.display='none'; }
+}
+
+document.querySelectorAll('.seg button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    historyPeriod = b.dataset.period;
+    periodOffset = 0;
+    renderHistory();
+  });
+});
+document.getElementById('prevPeriod').addEventListener('click',()=>{ periodOffset--; renderHistory(); });
+document.getElementById('nextPeriod').addEventListener('click',()=>{ periodOffset++; renderHistory(); });
+
+/* ============ TABS ============ */
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('view-'+b.dataset.view).classList.add('active');
+    if(b.dataset.view==='builder') renderProgress();
+    if(b.dataset.view==='day') renderDay();
+    if(b.dataset.view==='history') renderHistory();
+  });
+});
+
+/* ============ RESET ============ */
+document.getElementById('resetBtn').addEventListener('click', async ()=>{
+  if(!confirm('Effacer tout le journal des repas et les aliments personnalisés ? Cette action est irréversible.')) return;
+  meals=[]; customFoods=[];
+  await saveMeals(); await saveCustomFoods();
+  clearSelection(); renderCustomFoodList(); renderBuilder(); renderDay(); renderHistory();
+  showToast('Données effacées');
+});
+
+/* ============ INIT ============ */
+loadAll();
+</script>
+</body>
+</html>
